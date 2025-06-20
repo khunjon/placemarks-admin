@@ -1,101 +1,147 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [terminalText, setTerminalText] = useState('')
+  const router = useRouter()
+
+  const terminalLines = [
+    'PLACEMARKS ADMIN TERMINAL v2.1.4',
+    'Initializing secure connection...',
+    'Connection established.',
+    'Authentication required.',
+    ''
+  ]
+
+  useEffect(() => {
+    let currentLine = 0
+    let currentChar = 0
+    const typeText = () => {
+      if (currentLine < terminalLines.length) {
+        if (currentChar < terminalLines[currentLine].length) {
+          setTerminalText(prev => prev + terminalLines[currentLine][currentChar])
+          currentChar++
+          setTimeout(typeText, 50)
+        } else {
+          setTerminalText(prev => prev + '\n')
+          currentLine++
+          currentChar = 0
+          setTimeout(typeText, 200)
+        }
+      }
+    }
+    typeText()
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    setLoading(true)
     setError('')
-    setSuccess('')
 
-    try {
-      // We'll implement actual Supabase auth later
-      // For now, just simulate a login
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      if (email === 'admin@placemarks.xyz' && password === 'password') {
-        setSuccess('Login successful! (Demo mode)')
-      } else {
-        setError('Invalid credentials (Demo mode - use admin@placemarks.xyz / password)')
-      }
-    } catch {
-      setError('An unexpected error occurred')
-    } finally {
-      setIsLoading(false)
+    // Demo authentication
+    if (email === 'admin@placemarks.xyz' && password === 'password') {
+      localStorage.setItem('authenticated', 'true')
+      router.push('/')
+    } else {
+      setError('ACCESS DENIED')
     }
+    setLoading(false)
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">
-            Placemarks Admin
-          </CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access the admin panel
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen bg-black text-green-400 font-mono flex flex-col">
+      {/* Terminal Header */}
+      <div className="p-4 border-b border-green-900">
+        <div className="flex items-center space-x-2">
+          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          <span className="ml-4 text-green-500 text-sm">admin@placemarks:~$</span>
+        </div>
+      </div>
+
+      {/* Terminal Content */}
+      <div className="flex-1 p-6">
+        {/* Boot sequence */}
+        <div className="mb-8">
+          <pre className="text-sm leading-relaxed whitespace-pre-wrap">
+            {terminalText}
+          </pre>
+          <div className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1"></div>
+        </div>
+
+        {/* Login Form */}
+        <div className="max-w-md">
+          <div className="mb-6">
+            <div className="text-green-500 text-sm mb-2">
+              {'>'} Enter credentials:
+            </div>
+          </div>
+
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
+            <div>
+              <label className="block text-green-500 text-sm mb-1">
+                user@domain:
+              </label>
+              <input
                 type="email"
-                placeholder="admin@placemarks.xyz"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-black border border-green-900 text-green-400 px-3 py-2 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                placeholder="admin@placemarks.xyz"
                 required
-                disabled={isLoading}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
+
+            <div>
+              <label className="block text-green-500 text-sm mb-1">
+                password:
+              </label>
+              <input
                 type="password"
-                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-black border border-green-900 text-green-400 px-3 py-2 text-sm focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500"
+                placeholder="••••••••"
                 required
-                disabled={isLoading}
               />
             </div>
+
             {error && (
-              <div className="text-sm text-destructive text-center">
-                {error}
+              <div className="text-red-400 text-sm">
+                {'>'} ERROR: {error}
               </div>
             )}
-            {success && (
-              <div className="text-sm text-green-600 text-center">
-                {success}
-              </div>
-            )}
-            <Button
+
+            <button
               type="submit"
-              className="w-full"
-              disabled={isLoading}
+              disabled={loading}
+              className="w-full bg-green-900 hover:bg-green-800 text-green-400 py-2 px-4 text-sm border border-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </Button>
+              {loading ? 'AUTHENTICATING...' : 'AUTHENTICATE'}
+            </button>
           </form>
-          <div className="mt-4 text-xs text-muted-foreground text-center">
-            Demo mode: admin@placemarks.xyz / password
+
+          <div className="mt-8 text-xs text-green-700">
+            <div>Demo credentials:</div>
+            <div>user: admin@placemarks.xyz</div>
+            <div>pass: password</div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+
+      {/* Terminal Footer */}
+      <div className="p-4 border-t border-green-900">
+        <div className="text-xs text-green-700">
+          System status: SECURE | Uptime: 99.7% | Last login: {new Date().toLocaleString()}
+        </div>
+      </div>
     </div>
   )
 } 
