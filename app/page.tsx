@@ -23,6 +23,10 @@ export default function HomePage() {
     router.push('/login')
   }
 
+  const navigateTo = (path: string) => {
+    router.push(path)
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -64,34 +68,34 @@ export default function HomePage() {
 
           {/* Menu Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="card">
+            <div className="card" onClick={() => navigateTo('/lists')}>
+              <h3>LIST MANAGEMENT</h3>
+              <p>Manage placemarks lists and categories</p>
+            </div>
+            
+            <div className="card" onClick={() => navigateTo('/places')}>
+              <h3>PLACE MANAGEMENT</h3>
+              <p>Add, edit, and organize places</p>
+            </div>
+            
+            <div className="card" onClick={() => navigateTo('/users')}>
               <h3>USER MANAGEMENT</h3>
               <p>Manage user accounts and permissions</p>
             </div>
             
-            <div className="card">
-              <h3>ANALYTICS</h3>
-              <p>View system analytics and reports</p>
-            </div>
-            
-            <div className="card">
+            <div className="card" onClick={() => navigateTo('/database')}>
               <h3>DATABASE</h3>
               <p>Database administration tools</p>
             </div>
             
-            <div className="card">
-              <h3>SYSTEM LOGS</h3>
-              <p>View and analyze system logs</p>
+            <div className="card" onClick={() => navigateTo('/analytics')}>
+              <h3>ANALYTICS</h3>
+              <p>View system analytics and reports</p>
             </div>
             
-            <div className="card">
-              <h3>SETTINGS</h3>
-              <p>System configuration options</p>
-            </div>
-            
-            <div className="card">
-              <h3>SECURITY</h3>
-              <p>Security monitoring and controls</p>
+            <div className="card" onClick={() => navigateTo('/audit')}>
+              <h3>AUDIT</h3>
+              <p>Security monitoring and audit logs</p>
             </div>
           </div>
         </div>
