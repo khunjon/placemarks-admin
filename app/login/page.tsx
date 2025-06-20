@@ -30,7 +30,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md p-8">
         {/* Simple title with cursor */}
         <div className="text-center mb-12">
-          <h1 className="text-2xl text-white mb-2">ADMIN ACCESS</h1>
+          <h1 className="text-2xl text-white mb-2">PLACEMARKS</h1>
           <div className="flex items-center justify-center">
             <span className="text-white text-sm">AUTHENTICATE</span>
             <div className="cursor ml-2"></div>
