@@ -1,59 +1,39 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [supabase, setSupabase] = useState<SupabaseClient | null>(null)
-  const router = useRouter()
-
-  useEffect(() => {
-    setSupabase(createClient())
-  }, [])
+  const [success, setSuccess] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!supabase) return
-    
     setIsLoading(true)
     setError('')
+    setSuccess('')
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
+      // We'll implement actual Supabase auth later
+      // For now, just simulate a login
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      if (email === 'admin@placemarks.xyz' && password === 'password') {
+        setSuccess('Login successful! (Demo mode)')
       } else {
-        router.push('/')
-        router.refresh()
+        setError('Invalid credentials (Demo mode - use admin@placemarks.xyz / password)')
       }
     } catch {
       setError('An unexpected error occurred')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  if (!supabase) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    )
   }
 
   return (
@@ -98,14 +78,22 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+            {success && (
+              <div className="text-sm text-green-600 text-center">
+                {success}
+              </div>
+            )}
             <Button
               type="submit"
               className="w-full"
-              disabled={isLoading || !supabase}
+              disabled={isLoading}
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
+          <div className="mt-4 text-xs text-muted-foreground text-center">
+            Demo mode: admin@placemarks.xyz / password
+          </div>
         </CardContent>
       </Card>
     </div>
