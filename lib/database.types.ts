@@ -10,21 +10,11 @@ export type Json =
 
 export type Database = {
   public: {
-    Tables: {
-      // your tables here
-    }
-    Views: {
-      // your views here
-    }
-    Functions: {
-      // your functions here
-    }
-    Enums: {
-      // your enums here
-    }
-    CompositeTypes: {
-      // your composite types here
-    }
+    Tables: Record<string, never>
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
   }
 }
 
