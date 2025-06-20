@@ -25,10 +25,10 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center font-mono">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="text-white text-lg">LOADING</div>
-          <div className="w-3 h-5 bg-cyan-400 mx-auto mt-2 animate-pulse"></div>
+          <div className="cursor mx-auto mt-2"></div>
         </div>
       </div>
     )
@@ -39,16 +39,16 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white font-mono">
+    <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <div className="flex justify-between items-center p-6 border-b border-gray-800">
+      <div className="flex justify-between items-center p-6 border-b">
         <div className="flex items-center">
           <h1 className="text-xl">PLACEMARKS ADMIN</h1>
-          <div className="w-3 h-5 bg-cyan-400 ml-3 animate-pulse"></div>
+          <div className="cursor ml-3"></div>
         </div>
         <button
           onClick={handleLogout}
-          className="text-red-400 hover:text-red-300 transition-colors"
+          className="text-red transition"
         >
           EXIT
         </button>
@@ -59,39 +59,39 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-2xl mb-4">SYSTEM READY</h2>
-            <p className="text-gray-400">Select an administrative function</p>
+            <p className="text-gray">Select an administrative function</p>
           </div>
 
           {/* Menu Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="border border-cyan-400 p-6 hover:bg-cyan-400 hover:bg-opacity-10 transition-all cursor-pointer">
-              <h3 className="text-lg mb-2">USER MANAGEMENT</h3>
-              <p className="text-gray-400 text-sm">Manage user accounts and permissions</p>
+            <div className="card">
+              <h3>USER MANAGEMENT</h3>
+              <p>Manage user accounts and permissions</p>
             </div>
             
-            <div className="border border-cyan-400 p-6 hover:bg-cyan-400 hover:bg-opacity-10 transition-all cursor-pointer">
-              <h3 className="text-lg mb-2">ANALYTICS</h3>
-              <p className="text-gray-400 text-sm">View system analytics and reports</p>
+            <div className="card">
+              <h3>ANALYTICS</h3>
+              <p>View system analytics and reports</p>
             </div>
             
-            <div className="border border-cyan-400 p-6 hover:bg-cyan-400 hover:bg-opacity-10 transition-all cursor-pointer">
-              <h3 className="text-lg mb-2">DATABASE</h3>
-              <p className="text-gray-400 text-sm">Database administration tools</p>
+            <div className="card">
+              <h3>DATABASE</h3>
+              <p>Database administration tools</p>
             </div>
             
-            <div className="border border-cyan-400 p-6 hover:bg-cyan-400 hover:bg-opacity-10 transition-all cursor-pointer">
-              <h3 className="text-lg mb-2">SYSTEM LOGS</h3>
-              <p className="text-gray-400 text-sm">View and analyze system logs</p>
+            <div className="card">
+              <h3>SYSTEM LOGS</h3>
+              <p>View and analyze system logs</p>
             </div>
             
-            <div className="border border-cyan-400 p-6 hover:bg-cyan-400 hover:bg-opacity-10 transition-all cursor-pointer">
-              <h3 className="text-lg mb-2">SETTINGS</h3>
-              <p className="text-gray-400 text-sm">System configuration options</p>
+            <div className="card">
+              <h3>SETTINGS</h3>
+              <p>System configuration options</p>
             </div>
             
-            <div className="border border-cyan-400 p-6 hover:bg-cyan-400 hover:bg-opacity-10 transition-all cursor-pointer">
-              <h3 className="text-lg mb-2">SECURITY</h3>
-              <p className="text-gray-400 text-sm">Security monitoring and controls</p>
+            <div className="card">
+              <h3>SECURITY</h3>
+              <p>Security monitoring and controls</p>
             </div>
           </div>
         </div>

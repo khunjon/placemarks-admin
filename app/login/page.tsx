@@ -26,14 +26,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center font-mono">
+    <div className="min-h-screen bg-black flex items-center justify-center">
       <div className="w-full max-w-md p-8">
         {/* Simple title with cursor */}
         <div className="text-center mb-12">
           <h1 className="text-2xl text-white mb-2">ADMIN ACCESS</h1>
           <div className="flex items-center justify-center">
             <span className="text-white text-sm">AUTHENTICATE</span>
-            <div className="w-3 h-5 bg-cyan-400 ml-2 animate-pulse"></div>
+            <div className="cursor ml-2"></div>
           </div>
         </div>
 
@@ -44,7 +44,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-black border-b-2 border-cyan-400 text-white px-0 py-3 text-lg focus:outline-none focus:border-cyan-300 placeholder-gray-500"
+              className="form-input"
               placeholder="EMAIL"
               required
             />
@@ -55,14 +55,14 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-black border-b-2 border-cyan-400 text-white px-0 py-3 text-lg focus:outline-none focus:border-cyan-300 placeholder-gray-500"
+              className="form-input"
               placeholder="PASSWORD"
               required
             />
           </div>
 
           {error && (
-            <div className="text-red-400 text-sm text-center">
+            <div className="text-red text-sm text-center">
               {error}
             </div>
           )}
@@ -70,14 +70,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-transparent border-2 border-cyan-400 text-cyan-400 py-3 px-6 text-lg hover:bg-cyan-400 hover:text-black transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn"
           >
             {loading ? 'AUTHENTICATING...' : 'ENTER'}
           </button>
         </form>
 
         {/* Demo credentials */}
-        <div className="mt-12 text-center text-xs text-gray-600">
+        <div className="mt-12 text-center text-xs text-gray-dark">
           <div>Demo: admin@placemarks.xyz / password</div>
         </div>
       </div>
