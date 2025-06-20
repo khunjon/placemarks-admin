@@ -123,7 +123,7 @@ export default function HomePage() {
           <div className="flex items-center">
             <span className="text-green-500 text-sm mr-2">admin@placemarks:~$</span>
             <div className="flex-1 bg-black border border-green-900 px-3 py-2 text-sm">
-              <span className="text-green-700">Type 'help' for available commands</span>
+                             <span className="text-green-700">Type &apos;help&apos; for available commands</span>
               <div className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1"></div>
             </div>
           </div>

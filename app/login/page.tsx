@@ -37,7 +37,7 @@ export default function LoginPage() {
       }
     }
     typeText()
-  }, [])
+  }, [terminalLines])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
