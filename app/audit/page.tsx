@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation'
 export default function AuditPage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [selectedLog, setSelectedLog] = useState<any>(null)
+  const [filterAction, setFilterAction] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterTimeRange, setFilterTimeRange] = useState('24h')
+  const [searchTerm, setSearchTerm] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -42,254 +47,589 @@ export default function AuditPage() {
     return null
   }
 
+  // Mock audit log data focusing on admin actions
   const mockAuditLogs = [
-    { 
-      id: 1, 
-      timestamp: '2024-02-20 14:35:22', 
-      user: 'admin@placemarks.xyz', 
-      action: 'USER_LOGIN', 
-      resource: 'AUTHENTICATION', 
-      ip: '192.168.1.100',
-      status: 'SUCCESS' 
+    {
+      id: 1,
+      timestamp: '2024-02-20 14:35:22',
+      adminUser: 'admin@placemarks.com',
+      action: 'USER_BANNED',
+      category: 'USER_MANAGEMENT',
+      targetUser: 'david.spam@temp.com',
+      targetResource: 'User ID: 5',
+      details: 'Banned user for suspicious activity - creating many low-quality lists',
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      status: 'SUCCESS',
+      severity: 'HIGH'
     },
-    { 
-      id: 2, 
-      timestamp: '2024-02-20 14:32:15', 
-      user: 'jane.smith@example.com', 
-      action: 'PLACE_CREATED', 
-      resource: 'PLACES', 
-      ip: '10.0.0.45',
-      status: 'SUCCESS' 
+    {
+      id: 2,
+      timestamp: '2024-02-20 14:32:15',
+      adminUser: 'admin@placemarks.com',
+      action: 'PASSWORD_RESET',
+      category: 'USER_MANAGEMENT',
+      targetUser: 'jenny.travels@outlook.com',
+      targetResource: 'User ID: 3',
+      details: 'Password reset initiated by admin for user account recovery',
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      status: 'SUCCESS',
+      severity: 'MEDIUM'
     },
-    { 
-      id: 3, 
-      timestamp: '2024-02-20 14:28:03', 
-      user: 'unknown', 
-      action: 'LOGIN_ATTEMPT', 
-      resource: 'AUTHENTICATION', 
-      ip: '203.0.113.42',
-      status: 'FAILED' 
+    {
+      id: 3,
+      timestamp: '2024-02-20 14:28:03',
+      adminUser: 'admin@placemarks.com',
+      action: 'LIST_HIDDEN',
+      category: 'LIST_MANAGEMENT',
+      targetUser: 'mike.foodie@yahoo.com',
+      targetResource: 'List: "Sketchy Places Downtown"',
+      details: 'List hidden from public view due to inappropriate content',
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      status: 'SUCCESS',
+      severity: 'MEDIUM'
     },
-    { 
-      id: 4, 
-      timestamp: '2024-02-20 14:25:18', 
-      user: 'john.doe@example.com', 
-      action: 'LIST_DELETED', 
-      resource: 'LISTS', 
-      ip: '192.168.1.105',
-      status: 'SUCCESS' 
+    {
+      id: 4,
+      timestamp: '2024-02-20 14:25:18',
+      adminUser: 'moderator@placemarks.com',
+      action: 'LIST_DELETED',
+      category: 'LIST_MANAGEMENT',
+      targetUser: 'alex.coffee@gmail.com',
+      targetResource: 'List: "Private Coffee Spots"',
+      details: 'List permanently deleted due to copyright violations',
+      ipAddress: '192.168.1.105',
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      status: 'SUCCESS',
+      severity: 'HIGH'
     },
-    { 
-      id: 5, 
-      timestamp: '2024-02-20 14:20:45', 
-      user: 'admin@placemarks.xyz', 
-      action: 'USER_SUSPENDED', 
-      resource: 'USERS', 
-      ip: '192.168.1.100',
-      status: 'SUCCESS' 
+    {
+      id: 5,
+      timestamp: '2024-02-20 14:20:45',
+      adminUser: 'admin@placemarks.com',
+      action: 'USER_ROLE_CHANGED',
+      category: 'USER_MANAGEMENT',
+      targetUser: 'sarah.explorer@gmail.com',
+      targetResource: 'User ID: 1',
+      details: 'User role changed from USER to MODERATOR',
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      status: 'SUCCESS',
+      severity: 'HIGH'
+    },
+    {
+      id: 6,
+      timestamp: '2024-02-20 14:15:33',
+      adminUser: 'system',
+      action: 'SECURITY_SCAN',
+      category: 'SECURITY',
+      targetUser: null,
+      targetResource: 'System Wide',
+      details: 'Automated security scan detected 3 failed login attempts from IP 203.0.113.42',
+      ipAddress: '127.0.0.1',
+      userAgent: 'System/1.0',
+      status: 'WARNING',
+      severity: 'MEDIUM'
+    },
+    {
+      id: 7,
+      timestamp: '2024-02-20 14:10:12',
+      adminUser: 'admin@placemarks.com',
+      action: 'DATA_EXPORT',
+      category: 'DATA_MANAGEMENT',
+      targetUser: null,
+      targetResource: 'User Analytics Report',
+      details: 'Exported user analytics data for compliance reporting',
+      ipAddress: '192.168.1.100',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      status: 'SUCCESS',
+      severity: 'LOW'
+    },
+    {
+      id: 8,
+      timestamp: '2024-02-20 14:05:28',
+      adminUser: 'moderator@placemarks.com',
+      action: 'LIST_APPROVED',
+      category: 'LIST_MANAGEMENT',
+      targetUser: 'lisa.local@gmail.com',
+      targetResource: 'List: "Hidden Gems Portland"',
+      details: 'List approved after content review and published',
+      ipAddress: '192.168.1.105',
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      status: 'SUCCESS',
+      severity: 'LOW'
     }
   ]
 
-  const securityAlerts = [
-    { type: 'HIGH', message: 'Multiple failed login attempts from IP 203.0.113.42', time: '14:28' },
-    { type: 'MEDIUM', message: 'Unusual API request pattern detected', time: '13:45' },
-    { type: 'LOW', message: 'Database backup completed successfully', time: '12:00' },
-    { type: 'MEDIUM', message: 'New admin user created', time: '11:30' }
-  ]
+  const dashboardStyles = {
+    metricsCard: {
+      backgroundColor: '#1a1a1a',
+      border: '1px solid #333',
+      borderRadius: '8px',
+      padding: '24px',
+      marginBottom: '24px'
+    },
+    metricsTable: {
+      width: '100%',
+      borderCollapse: 'collapse' as const,
+      marginTop: '16px'
+    },
+    tableHeader: {
+      backgroundColor: '#2a2a2a',
+      color: '#00ffff',
+      padding: '12px 16px',
+      textAlign: 'left' as const,
+      fontSize: '14px',
+      fontWeight: '600',
+      borderBottom: '1px solid #444'
+    },
+    tableCell: {
+      padding: '12px 16px',
+      borderBottom: '1px solid #333',
+      color: '#fff',
+      fontSize: '14px'
+    },
+    metricValue: {
+      fontSize: '24px',
+      fontWeight: 'bold',
+      color: '#00ffff',
+      marginBottom: '8px'
+    },
+    metricLabel: {
+      fontSize: '14px',
+      color: '#999',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.5px'
+    },
+    chartContainer: {
+      backgroundColor: '#1a1a1a',
+      border: '1px solid #333',
+      borderRadius: '8px',
+      padding: '24px',
+      marginBottom: '24px'
+    },
+    input: {
+      backgroundColor: '#2a2a2a',
+      border: '1px solid #444',
+      borderRadius: '4px',
+      padding: '12px 16px',
+      color: '#fff',
+      fontSize: '14px',
+      width: '100%'
+    },
+    select: {
+      backgroundColor: '#2a2a2a',
+      border: '1px solid #444',
+      borderRadius: '4px',
+      padding: '12px 16px',
+      color: '#fff',
+      fontSize: '14px',
+      width: '100%'
+    },
+    button: {
+      backgroundColor: '#00ffff',
+      color: '#000',
+      border: 'none',
+      borderRadius: '4px',
+      padding: '12px 24px',
+      fontSize: '14px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.2s'
+    },
+    buttonSecondary: {
+      backgroundColor: 'transparent',
+      color: '#00ffff',
+      border: '1px solid #00ffff',
+      borderRadius: '4px',
+      padding: '8px 16px',
+      fontSize: '12px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.2s'
+    },
+    modal: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0,0,0,0.8)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    },
+    modalContent: {
+      backgroundColor: '#1a1a1a',
+      border: '1px solid #333',
+      borderRadius: '8px',
+      padding: '32px',
+      maxWidth: '800px',
+      width: '90%',
+      maxHeight: '80vh',
+      overflow: 'auto'
+    }
+  }
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'HIGH': return '#ef4444'
+      case 'MEDIUM': return '#f59e0b'
+      case 'LOW': return '#10b981'
+      default: return '#6b7280'
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'SUCCESS': return '#10b981'
+      case 'WARNING': return '#f59e0b'
+      case 'FAILED': return '#ef4444'
+      default: return '#6b7280'
+    }
+  }
+
+  const filteredLogs = mockAuditLogs.filter(log => {
+    const matchesSearch = searchTerm === '' || 
+      log.adminUser.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.targetUser?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.details.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesAction = filterAction === '' || log.action === filterAction
+    const matchesStatus = filterStatus === '' || log.status === filterStatus
+    
+    return matchesSearch && matchesAction && matchesStatus
+  })
+
+  // Calculate audit metrics
+  const totalLogs = mockAuditLogs.length
+  const highSeverityCount = mockAuditLogs.filter(log => log.severity === 'HIGH').length
+  const failedActionsCount = mockAuditLogs.filter(log => log.status === 'FAILED' || log.status === 'WARNING').length
+  const userManagementCount = mockAuditLogs.filter(log => log.category === 'USER_MANAGEMENT').length
+  const listManagementCount = mockAuditLogs.filter(log => log.category === 'LIST_MANAGEMENT').length
 
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <div className="flex justify-between items-center p-6 border-b">
+      <div className="flex justify-between items-center p-6 border-b border-gray-800">
         <div className="flex items-center">
-          <button onClick={goBack} className="text-cyan mr-4 transition">&lt; BACK</button>
-          <h1 className="text-xl">AUDIT & SECURITY</h1>
+          <button 
+            onClick={goBack} 
+            style={{
+              backgroundColor: '#1a1a1a',
+              border: '1px solid #00ffff',
+              color: '#00ffff',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              fontSize: '14px',
+              fontWeight: '600',
+              marginRight: '24px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#00ffff'
+              e.currentTarget.style.color = '#000'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#1a1a1a'
+              e.currentTarget.style.color = '#00ffff'
+            }}
+          >
+            ← BACK
+          </button>
+          <h1 className="text-2xl font-medium">Audit & Compliance</h1>
           <div className="cursor ml-3"></div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-red transition"
-        >
-          EXIT
-        </button>
+        <div className="flex items-center gap-6">
+          <div className="text-sm text-gray-400">
+            Last updated: {new Date().toLocaleTimeString()}
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{
+              backgroundColor: '#1a1a1a',
+              border: '1px solid #ef4444',
+              color: '#ef4444',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#ef4444'
+              e.currentTarget.style.color = '#fff'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#1a1a1a'
+              e.currentTarget.style.color = '#ef4444'
+            }}
+          >
+            SIGN OUT
+          </button>
+        </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Actions Bar */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-2xl mb-2">SECURITY MONITORING</h2>
-              <p className="text-gray">Monitor system security and audit trails</p>
+      <div style={{ padding: '32px', maxWidth: 'none', margin: '0' }}>
+        
+        {/* Audit Overview KPIs */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+          <div style={dashboardStyles.metricsCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={dashboardStyles.metricLabel}>Total Audit Logs</h3>
+              <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
             </div>
-            <div className="flex gap-4">
-              <button className="btn" style={{width: 'auto', padding: '0.75rem 1.5rem'}}>
-                EXPORT LOGS
-              </button>
-              <button className="btn" style={{width: 'auto', padding: '0.75rem 1.5rem'}}>
-                SECURITY SCAN
-              </button>
+            <div style={dashboardStyles.metricValue}>{totalLogs.toLocaleString()}</div>
+            <div style={{ fontSize: '14px', color: '#10b981' }}>
+              +{Math.floor(totalLogs * 0.12)} <span style={{ color: '#666', marginLeft: '8px' }}>this week</span>
             </div>
           </div>
 
-          {/* Security Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="card">
-              <h3>SECURITY STATUS</h3>
-              <div className="text-cyan mt-2">● SECURE</div>
+          <div style={dashboardStyles.metricsCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={dashboardStyles.metricLabel}>High Severity Events</h3>
+              <div style={{ width: '8px', height: '8px', backgroundColor: '#ef4444', borderRadius: '50%' }}></div>
             </div>
-            <div className="card">
-              <h3>FAILED LOGINS</h3>
-              <div className="text-2xl text-red mt-2">3</div>
-              <div className="text-sm text-gray mt-1">Last 24 hours</div>
-            </div>
-            <div className="card">
-              <h3>ACTIVE SESSIONS</h3>
-              <div className="text-2xl text-cyan mt-2">47</div>
-              <div className="text-sm text-gray mt-1">Currently online</div>
-            </div>
-            <div className="card">
-              <h3>AUDIT ENTRIES</h3>
-              <div className="text-2xl text-cyan mt-2">15,623</div>
-              <div className="text-sm text-gray mt-1">Total recorded</div>
+            <div style={dashboardStyles.metricValue}>{highSeverityCount}</div>
+            <div style={{ fontSize: '14px', color: '#ef4444' }}>
+              Requires attention
             </div>
           </div>
 
-          {/* Security Alerts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="border-cyan" style={{border: '1px solid #00ffff', padding: '1rem'}}>
-              <h3 className="text-lg mb-4">RECENT SECURITY ALERTS</h3>
-              <div className="space-y-3">
-                {securityAlerts.map((alert, index) => (
-                  <div key={index} className="border-b pb-3" style={{borderBottomColor: '#222'}}>
-                    <div className="flex justify-between items-start mb-1">
-                      <span className={`text-xs px-2 py-1 ${
-                        alert.type === 'HIGH' ? 'bg-red text-black' : 
-                        alert.type === 'MEDIUM' ? 'bg-yellow text-black' : 
-                        'bg-gray text-white'
-                      }`}>
-                        {alert.type}
-                      </span>
-                      <span className="text-xs text-gray">{alert.time}</span>
-                    </div>
-                    <p className="text-sm">{alert.message}</p>
-                  </div>
-                ))}
-              </div>
+          <div style={dashboardStyles.metricsCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={dashboardStyles.metricLabel}>Failed/Warning Actions</h3>
+              <div style={{ width: '8px', height: '8px', backgroundColor: '#f59e0b', borderRadius: '50%' }}></div>
             </div>
-
-            <div className="border-cyan" style={{border: '1px solid #00ffff', padding: '1rem'}}>
-              <h3 className="text-lg mb-4">SYSTEM HEALTH</h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Authentication System</span>
-                    <span className="text-cyan">ONLINE</span>
-                  </div>
-                  <div className="w-full bg-gray-800 h-2">
-                    <div className="bg-cyan h-2 w-full"></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Database Security</span>
-                    <span className="text-cyan">SECURE</span>
-                  </div>
-                  <div className="w-full bg-gray-800 h-2">
-                    <div className="bg-cyan h-2 w-full"></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>API Rate Limiting</span>
-                    <span className="text-cyan">ACTIVE</span>
-                  </div>
-                  <div className="w-full bg-gray-800 h-2">
-                    <div className="bg-cyan h-2 w-full"></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Firewall Status</span>
-                    <span className="text-cyan">PROTECTED</span>
-                  </div>
-                  <div className="w-full bg-gray-800 h-2">
-                    <div className="bg-cyan h-2 w-full"></div>
-                  </div>
-                </div>
-              </div>
+            <div style={dashboardStyles.metricValue}>{failedActionsCount}</div>
+            <div style={{ fontSize: '14px', color: '#f59e0b' }}>
+              {((failedActionsCount / totalLogs) * 100).toFixed(1)}% <span style={{ color: '#666', marginLeft: '8px' }}>failure rate</span>
             </div>
           </div>
 
-          {/* Filters */}
-          <div className="mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <input 
-                type="text" 
-                placeholder="SEARCH LOGS..." 
-                className="form-input"
-              />
-              <select className="form-input">
-                <option>ALL ACTIONS</option>
-                <option>USER_LOGIN</option>
-                <option>USER_LOGOUT</option>
-                <option>PLACE_CREATED</option>
-                <option>PLACE_DELETED</option>
-                <option>LIST_CREATED</option>
-                <option>LIST_DELETED</option>
-              </select>
-              <select className="form-input">
-                <option>ALL STATUS</option>
-                <option>SUCCESS</option>
-                <option>FAILED</option>
-                <option>WARNING</option>
-              </select>
-              <select className="form-input">
-                <option>LAST 24 HOURS</option>
-                <option>LAST 7 DAYS</option>
-                <option>LAST 30 DAYS</option>
-                <option>CUSTOM RANGE</option>
-              </select>
+          <div style={dashboardStyles.metricsCard}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <h3 style={dashboardStyles.metricLabel}>Admin Actions</h3>
+              <div style={{ width: '8px', height: '8px', backgroundColor: '#8b5cf6', borderRadius: '50%' }}></div>
             </div>
-          </div>
-
-          {/* Audit Log Table */}
-          <div className="border-cyan" style={{border: '1px solid #00ffff', padding: '1rem'}}>
-            <div className="mb-4">
-              <h3 className="text-lg mb-2">AUDIT LOG ENTRIES</h3>
+            <div style={dashboardStyles.metricValue}>{userManagementCount + listManagementCount}</div>
+            <div style={{ fontSize: '14px', color: '#8b5cf6' }}>
+              User: {userManagementCount} | List: {listManagementCount}
             </div>
-            
-            {/* Table Header */}
-            <div className="grid grid-cols-7 gap-4 mb-4 pb-2 border-b" style={{borderBottomColor: '#333'}}>
-              <div className="text-cyan text-sm">TIMESTAMP</div>
-              <div className="text-cyan text-sm">USER</div>
-              <div className="text-cyan text-sm">ACTION</div>
-              <div className="text-cyan text-sm">RESOURCE</div>
-              <div className="text-cyan text-sm">IP ADDRESS</div>
-              <div className="text-cyan text-sm">STATUS</div>
-              <div className="text-cyan text-sm">DETAILS</div>
-            </div>
-
-            {/* Table Rows */}
-            {mockAuditLogs.map(log => (
-              <div key={log.id} className="grid grid-cols-7 gap-4 py-3 border-b transition" style={{borderBottomColor: '#222'}}>
-                <div className="text-gray text-sm">{log.timestamp}</div>
-                <div className="text-white text-sm">{log.user}</div>
-                <div className="text-gray text-sm">{log.action}</div>
-                <div className="text-gray text-sm">{log.resource}</div>
-                <div className="text-gray text-sm">{log.ip}</div>
-                <div className={`text-sm ${log.status === 'SUCCESS' ? 'text-cyan' : 'text-red'}`}>
-                  {log.status}
-                </div>
-                <div>
-                  <button className="text-cyan text-sm transition">VIEW</button>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
+
+        {/* Filters */}
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '16px' }}>
+            <input
+              type="text"
+              placeholder="Search by admin, user, action, or details..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={dashboardStyles.input}
+            />
+            <select
+              value={filterAction}
+              onChange={(e) => setFilterAction(e.target.value)}
+              style={dashboardStyles.select}
+            >
+              <option value="">All Actions</option>
+              <option value="USER_BANNED">User Banned</option>
+              <option value="PASSWORD_RESET">Password Reset</option>
+              <option value="USER_ROLE_CHANGED">Role Changed</option>
+              <option value="LIST_HIDDEN">List Hidden</option>
+              <option value="LIST_DELETED">List Deleted</option>
+              <option value="LIST_APPROVED">List Approved</option>
+              <option value="DATA_EXPORT">Data Export</option>
+              <option value="SECURITY_SCAN">Security Scan</option>
+            </select>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              style={dashboardStyles.select}
+            >
+              <option value="">All Status</option>
+              <option value="SUCCESS">Success</option>
+              <option value="WARNING">Warning</option>
+              <option value="FAILED">Failed</option>
+            </select>
+            <select
+              value={filterTimeRange}
+              onChange={(e) => setFilterTimeRange(e.target.value)}
+              style={dashboardStyles.select}
+            >
+              <option value="24h">Last 24 Hours</option>
+              <option value="7d">Last 7 Days</option>
+              <option value="30d">Last 30 Days</option>
+              <option value="90d">Last 90 Days</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Audit Log Table */}
+        <div style={dashboardStyles.chartContainer}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#fff' }}>
+              Audit Log ({filteredLogs.length} entries)
+            </h3>
+            <button style={dashboardStyles.buttonSecondary}>
+              EXPORT LOGS
+            </button>
+          </div>
+          <table style={dashboardStyles.metricsTable}>
+            <thead>
+              <tr>
+                <th style={dashboardStyles.tableHeader}>Timestamp</th>
+                <th style={dashboardStyles.tableHeader}>Admin User</th>
+                <th style={dashboardStyles.tableHeader}>Action</th>
+                <th style={dashboardStyles.tableHeader}>Target</th>
+                <th style={dashboardStyles.tableHeader}>Severity</th>
+                <th style={dashboardStyles.tableHeader}>Status</th>
+                <th style={dashboardStyles.tableHeader}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLogs.map((log) => (
+                <tr key={log.id}>
+                  <td style={dashboardStyles.tableCell}>
+                    <div style={{ fontSize: '12px' }}>{log.timestamp}</div>
+                  </td>
+                  <td style={dashboardStyles.tableCell}>
+                    <div>
+                      <div style={{ fontWeight: '600' }}>{log.adminUser}</div>
+                      <div style={{ fontSize: '12px', color: '#999' }}>{log.category}</div>
+                    </div>
+                  </td>
+                  <td style={dashboardStyles.tableCell}>
+                    <div style={{ fontWeight: '600' }}>{log.action.replace(/_/g, ' ')}</div>
+                  </td>
+                  <td style={dashboardStyles.tableCell}>
+                    <div>
+                      {log.targetUser && (
+                        <div style={{ fontSize: '12px', color: '#00ffff' }}>{log.targetUser}</div>
+                      )}
+                      <div style={{ fontSize: '11px', color: '#999' }}>{log.targetResource}</div>
+                    </div>
+                  </td>
+                  <td style={dashboardStyles.tableCell}>
+                    <span style={{ 
+                      color: getSeverityColor(log.severity),
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      padding: '4px 8px',
+                      backgroundColor: `${getSeverityColor(log.severity)}20`,
+                      borderRadius: '4px'
+                    }}>
+                      {log.severity}
+                    </span>
+                  </td>
+                  <td style={dashboardStyles.tableCell}>
+                    <span style={{ 
+                      color: getStatusColor(log.status),
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      padding: '4px 8px',
+                      backgroundColor: `${getStatusColor(log.status)}20`,
+                      borderRadius: '4px'
+                    }}>
+                      {log.status}
+                    </span>
+                  </td>
+                  <td style={dashboardStyles.tableCell}>
+                    <button
+                      onClick={() => setSelectedLog(log)}
+                      style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
+                    >
+                      VIEW DETAILS
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Audit Log Details Modal */}
+      {selectedLog && (
+        <div style={dashboardStyles.modal}>
+          <div style={dashboardStyles.modalContent}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#fff' }}>
+                Audit Log Details
+              </h2>
+              <button
+                onClick={() => setSelectedLog(null)}
+                style={{ background: 'none', border: 'none', color: '#999', fontSize: '24px', cursor: 'pointer' }}
+              >
+                ×
+              </button>
+            </div>
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Timestamp</div>
+                  <div style={{ color: '#fff' }}>{selectedLog.timestamp}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Admin User</div>
+                  <div style={{ color: '#00ffff' }}>{selectedLog.adminUser}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Action</div>
+                  <div style={{ color: '#fff' }}>{selectedLog.action.replace(/_/g, ' ')}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Category</div>
+                  <div style={{ color: '#fff' }}>{selectedLog.category.replace(/_/g, ' ')}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Target User</div>
+                  <div style={{ color: selectedLog.targetUser ? '#00ffff' : '#666' }}>
+                    {selectedLog.targetUser || 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Resource</div>
+                  <div style={{ color: '#fff' }}>{selectedLog.targetResource}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Severity</div>
+                  <div style={{ color: getSeverityColor(selectedLog.severity) }}>{selectedLog.severity}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Status</div>
+                  <div style={{ color: getStatusColor(selectedLog.status) }}>{selectedLog.status}</div>
+                </div>
+              </div>
+              <div>
+                <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Details</div>
+                <div style={{ color: '#fff', backgroundColor: '#2a2a2a', padding: '12px', borderRadius: '4px' }}>
+                  {selectedLog.details}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>IP Address</div>
+                  <div style={{ color: '#fff', fontFamily: 'monospace' }}>{selectedLog.ipAddress}</div>
+                </div>
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>User Agent</div>
+                  <div style={{ color: '#999', fontSize: '12px' }}>{selectedLog.userAgent}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import AdminHeader from '../components/AdminHeader'
 
 export default function HomePage() {
   const [authenticated, setAuthenticated] = useState(false)
@@ -18,10 +19,7 @@ export default function HomePage() {
     setLoading(false)
   }, [router])
 
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated')
-    router.push('/login')
-  }
+
 
   const navigateTo = (path: string) => {
     router.push(path)
@@ -44,58 +42,45 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <div className="flex justify-between items-center p-6 border-b">
-        <div className="flex items-center">
-          <h1 className="text-xl">PLACEMARKS ADMIN</h1>
-          <div className="cursor ml-3"></div>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="text-red transition"
-        >
-          EXIT
-        </button>
-      </div>
+      <AdminHeader title="PLACEMARKS ADMIN" showBackButton={false} />
 
       {/* Main Content */}
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-2xl mb-4">SYSTEM READY</h2>
             <p className="text-gray">Select an administrative function</p>
           </div>
 
           {/* Menu Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="card" onClick={() => navigateTo('/lists')}>
-              <h3>LIST MANAGEMENT</h3>
-              <p>Manage placemarks lists and categories</p>
+              <h3>LISTS</h3>
+              <p>Create curated lists, search existing content, hide/delete inappropriate lists</p>
             </div>
             
             <div className="card" onClick={() => navigateTo('/places')}>
-              <h3>PLACE MANAGEMENT</h3>
-              <p>Add, edit, and organize places</p>
+              <h3>PLACES</h3>
+              <p>Search Google cached places, refresh data, set custom photos, add admin notes</p>
             </div>
             
             <div className="card" onClick={() => navigateTo('/users')}>
-              <h3>USER MANAGEMENT</h3>
-              <p>Manage user accounts and permissions</p>
+              <h3>USERS</h3>
+              <p>Search users, reset passwords, ban accounts, view activity and rankings</p>
             </div>
             
             <div className="card" onClick={() => navigateTo('/database')}>
               <h3>DATABASE</h3>
-              <p>Database administration tools</p>
+              <p>Monitor health metrics, view table data, run SQL queries, track migrations</p>
             </div>
             
             <div className="card" onClick={() => navigateTo('/analytics')}>
               <h3>ANALYTICS</h3>
-              <p>View system analytics and reports</p>
+              <p>Backend KPI dashboard with user growth, activity feeds, system performance</p>
             </div>
             
             <div className="card" onClick={() => navigateTo('/audit')}>
               <h3>AUDIT</h3>
-              <p>Security monitoring and audit logs</p>
+              <p>Admin action logging, compliance tracking, security monitoring and reports</p>
             </div>
           </div>
         </div>
