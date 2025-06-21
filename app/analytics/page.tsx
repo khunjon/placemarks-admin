@@ -42,14 +42,6 @@ export default function AnalyticsPage() {
     return null
   }
 
-  const mockMetrics = [
-    { period: 'TODAY', users: 234, places: 45, lists: 12 },
-    { period: 'YESTERDAY', users: 198, places: 38, lists: 8 },
-    { period: 'THIS WEEK', users: 1456, places: 287, lists: 67 },
-    { period: 'LAST WEEK', users: 1289, places: 245, lists: 54 },
-    { period: 'THIS MONTH', users: 5847, places: 1124, lists: 234 }
-  ]
-
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
@@ -70,88 +62,110 @@ export default function AnalyticsPage() {
       {/* Main Content */}
       <div className="p-6">
         <div className="max-w-6xl mx-auto">
-          {/* Actions Bar */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h2 className="text-2xl mb-2">SYSTEM ANALYTICS</h2>
-              <p className="text-gray">Monitor usage patterns and performance metrics</p>
-            </div>
-            <div className="flex gap-4">
-              <button className="btn" style={{width: 'auto', padding: '0.75rem 1.5rem'}}>
-                EXPORT REPORT
-              </button>
-              <button className="btn" style={{width: 'auto', padding: '0.75rem 1.5rem'}}>
-                CUSTOM QUERY
-              </button>
-            </div>
-          </div>
-
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="card">
-              <h3>DAILY ACTIVE USERS</h3>
-              <div className="text-2xl text-cyan mt-2">234</div>
-              <div className="text-sm text-gray mt-1">+18% from yesterday</div>
-            </div>
-            <div className="card">
-              <h3>NEW PLACES TODAY</h3>
-              <div className="text-2xl text-cyan mt-2">45</div>
-              <div className="text-sm text-gray mt-1">+12% from yesterday</div>
-            </div>
-            <div className="card">
-              <h3>LISTS CREATED</h3>
-              <div className="text-2xl text-cyan mt-2">12</div>
-              <div className="text-sm text-gray mt-1">+25% from yesterday</div>
-            </div>
-            <div className="card">
-              <h3>API REQUESTS</h3>
-              <div className="text-2xl text-cyan mt-2">8,942</div>
-              <div className="text-sm text-gray mt-1">+5% from yesterday</div>
-            </div>
-          </div>
-
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <div className="border-cyan" style={{border: '1px solid #00ffff', padding: '1rem'}}>
-              <h3 className="text-lg mb-4">USER ACTIVITY TREND</h3>
-              <div className="h-48 flex items-end justify-between px-4">
-                {[65, 45, 78, 52, 89, 67, 94].map((height, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div 
-                      className="bg-cyan w-8 transition-all"
-                      style={{height: `${height}%`}}
-                    ></div>
-                    <div className="text-xs text-gray mt-2">
-                      {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'][index]}
-                    </div>
-                  </div>
-                ))}
+          {/* USER ANALYTICS */}
+          <div className="mb-12">
+            <h2 className="text-2xl mb-6 text-cyan">USER ANALYTICS</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="card">
+                <h3>TOTAL USERS</h3>
+                <div className="text-2xl text-cyan mt-2">12,847</div>
+                <div className="text-sm text-gray mt-1">All registered users</div>
+              </div>
+              <div className="card">
+                <h3>NEW USERS LAST 24H</h3>
+                <div className="text-2xl text-cyan mt-2">34</div>
+                <div className="text-sm text-gray mt-1">+18% from previous day</div>
+              </div>
+              <div className="card">
+                <h3>ACTIVE USERS TODAY</h3>
+                <div className="text-2xl text-cyan mt-2">234</div>
+                <div className="text-sm text-gray mt-1">Daily active users</div>
+              </div>
+              <div className="card">
+                <h3>MONTHLY ACTIVE USERS</h3>
+                <div className="text-2xl text-cyan mt-2">5,847</div>
+                <div className="text-sm text-gray mt-1">+12% from last month</div>
               </div>
             </div>
+          </div>
 
-            <div className="border-cyan" style={{border: '1px solid #00ffff', padding: '1rem'}}>
-              <h3 className="text-lg mb-4">PLACE CATEGORIES</h3>
-              <div className="space-y-3">
-                {[
-                  { name: 'RESTAURANTS', count: 456, percentage: 65 },
-                  { name: 'COFFEE SHOPS', count: 234, percentage: 45 },
-                  { name: 'PARKS', count: 189, percentage: 35 },
-                  { name: 'MUSEUMS', count: 123, percentage: 25 },
-                  { name: 'SHOPPING', count: 98, percentage: 20 }
-                ].map((category, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>{category.name}</span>
-                      <span className="text-cyan">{category.count}</span>
-                    </div>
-                    <div className="w-full bg-gray-800 h-2">
-                      <div 
-                        className="bg-cyan h-2 transition-all"
-                        style={{width: `${category.percentage}%`}}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+          {/* PLACE ANALYTICS */}
+          <div className="mb-12">
+            <h2 className="text-2xl mb-6 text-cyan">PLACE ANALYTICS</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="card">
+                <h3>TOTAL PLACES</h3>
+                <div className="text-2xl text-cyan mt-2">8,492</div>
+                <div className="text-sm text-gray mt-1">All places in database</div>
+              </div>
+              <div className="card">
+                <h3>NEW PLACES LAST 24H</h3>
+                <div className="text-2xl text-cyan mt-2">45</div>
+                <div className="text-sm text-gray mt-1">+12% from previous day</div>
+              </div>
+              <div className="card">
+                <h3>VERIFIED PLACES</h3>
+                <div className="text-2xl text-cyan mt-2">7,234</div>
+                <div className="text-sm text-gray mt-1">85% verification rate</div>
+              </div>
+              <div className="card">
+                <h3>TOP CATEGORY</h3>
+                <div className="text-2xl text-cyan mt-2">RESTAURANTS</div>
+                <div className="text-sm text-gray mt-1">2,456 places (29%)</div>
+              </div>
+            </div>
+          </div>
+
+          {/* LIST ANALYTICS */}
+          <div className="mb-12">
+            <h2 className="text-2xl mb-6 text-cyan">LIST ANALYTICS</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="card">
+                <h3>TOTAL LISTS</h3>
+                <div className="text-2xl text-cyan mt-2">1,847</div>
+                <div className="text-sm text-gray mt-1">All user-created lists</div>
+              </div>
+              <div className="card">
+                <h3>NEW LISTS LAST 24H</h3>
+                <div className="text-2xl text-cyan mt-2">12</div>
+                <div className="text-sm text-gray mt-1">+25% from previous day</div>
+              </div>
+              <div className="card">
+                <h3>AVERAGE LIST SIZE</h3>
+                <div className="text-2xl text-cyan mt-2">8.4</div>
+                <div className="text-sm text-gray mt-1">Places per list</div>
+              </div>
+              <div className="card">
+                <h3>MOST POPULAR LIST</h3>
+                <div className="text-2xl text-cyan mt-2">COFFEE SPOTS</div>
+                <div className="text-sm text-gray mt-1">347 followers</div>
+              </div>
+            </div>
+          </div>
+
+          {/* CHECKIN ANALYTICS */}
+          <div className="mb-12">
+            <h2 className="text-2xl mb-6 text-cyan">CHECKIN ANALYTICS</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="card">
+                <h3>TOTAL CHECKINS</h3>
+                <div className="text-2xl text-cyan mt-2">45,892</div>
+                <div className="text-sm text-gray mt-1">All time checkins</div>
+              </div>
+              <div className="card">
+                <h3>CHECKINS LAST 24H</h3>
+                <div className="text-2xl text-cyan mt-2">156</div>
+                <div className="text-sm text-gray mt-1">+8% from previous day</div>
+              </div>
+              <div className="card">
+                <h3>AVERAGE DAILY CHECKINS</h3>
+                <div className="text-2xl text-cyan mt-2">127</div>
+                <div className="text-sm text-gray mt-1">7-day average</div>
+              </div>
+              <div className="card">
+                <h3>TOP CHECKIN LOCATION</h3>
+                <div className="text-2xl text-cyan mt-2">CENTRAL PARK</div>
+                <div className="text-sm text-gray mt-1">892 checkins this month</div>
               </div>
             </div>
           </div>
@@ -211,31 +225,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Activity Log */}
-          <div className="border-cyan" style={{border: '1px solid #00ffff', padding: '1rem'}}>
-            <div className="mb-4">
-              <h3 className="text-lg mb-2">RECENT ACTIVITY</h3>
-            </div>
-            
-            {/* Table Header */}
-            <div className="grid grid-cols-4 gap-4 mb-4 pb-2 border-b" style={{borderBottomColor: '#333'}}>
-              <div className="text-cyan text-sm">TIME PERIOD</div>
-              <div className="text-cyan text-sm">ACTIVE USERS</div>
-              <div className="text-cyan text-sm">NEW PLACES</div>
-              <div className="text-cyan text-sm">LISTS CREATED</div>
-            </div>
-
-            {/* Table Rows */}
-            {mockMetrics.map((metric, index) => (
-              <div key={index} className="grid grid-cols-4 gap-4 py-3 border-b transition" style={{borderBottomColor: '#222'}}>
-                <div className="text-white">{metric.period}</div>
-                <div className="text-gray">{metric.users.toLocaleString()}</div>
-                <div className="text-gray">{metric.places}</div>
-                <div className="text-gray">{metric.lists}</div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
