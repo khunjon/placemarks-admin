@@ -3,13 +3,28 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface Place {
+  id: number
+  name: string
+  category: string
+  address: string
+  googlePlaceId: string
+  defaultPhoto: string
+  lastRefreshed: string
+  thumbsUp: number
+  thumbsDown: number
+  notes: string
+  phoneNumber: string
+  website: string
+}
+
 export default function PlaceManagementPage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedPlace, setSelectedPlace] = useState<any>(null)
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [editingPlace, setEditingPlace] = useState<any>(null)
+  const [editingPlace, setEditingPlace] = useState<Place | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -246,7 +261,7 @@ export default function PlaceManagementPage() {
     // Handle refresh logic here
   }
 
-  const handleEditPlace = (place: any) => {
+  const handleEditPlace = (place: Place) => {
     setEditingPlace({...place})
     setShowEditModal(true)
   }

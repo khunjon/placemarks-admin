@@ -3,10 +3,25 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface AuditLog {
+  id: number
+  timestamp: string
+  adminUser: string
+  action: string
+  category: string
+  targetUser: string | null
+  targetResource: string
+  details: string
+  ipAddress: string
+  userAgent: string
+  status: string
+  severity: string
+}
+
 export default function AuditPage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [selectedLog, setSelectedLog] = useState<any>(null)
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
   const [filterAction, setFilterAction] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [filterTimeRange, setFilterTimeRange] = useState('24h')

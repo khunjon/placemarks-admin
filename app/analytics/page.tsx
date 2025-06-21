@@ -168,7 +168,7 @@ export default function AnalyticsPage() {
             </div>
             <div style={{ padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', borderLeft: '3px solid #3b82f6' }}>
               <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>List Created</div>
-              <div style={{ fontSize: '12px', color: '#999' }}>mike_chen created "Best Coffee in SF" • 5 minutes ago</div>
+              <div style={{ fontSize: '12px', color: '#999' }}>mike_chen created &quot;Best Coffee in SF&quot; • 5 minutes ago</div>
             </div>
             <div style={{ padding: '12px', backgroundColor: '#2a2a2a', borderRadius: '6px', borderLeft: '3px solid #f59e0b' }}>
               <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>Place Check-in</div>

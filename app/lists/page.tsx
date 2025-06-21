@@ -3,11 +3,24 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface List {
+  id: number
+  name: string
+  publisher: string
+  places: number
+  created: string
+  status: string
+  photo: string
+  link_url: string
+  views: number
+  likes: number
+}
+
 export default function ListManagementPage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedList, setSelectedList] = useState<any>(null)
+  const [selectedList, setSelectedList] = useState<List | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newListData, setNewListData] = useState({
     name: '',

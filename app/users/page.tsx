@@ -3,14 +3,28 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface User {
+  id: number
+  email: string
+  name: string
+  joinDate: string
+  lastActive: string
+  status: string
+  totalLists: number
+  totalCheckins: number
+  profilePhoto: string
+  location: string
+  notes: string
+}
+
 export default function UserManagementPage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showBanModal, setShowBanModal] = useState(false)
   const [showResetModal, setShowResetModal] = useState(false)
-  const [actionUser, setActionUser] = useState<any>(null)
+  const [actionUser, setActionUser] = useState<User | null>(null)
   const [banReason, setBanReason] = useState('')
   const router = useRouter()
 
@@ -276,25 +290,29 @@ export default function UserManagementPage() {
     }
   }
 
-  const handleBanUser = (user: any) => {
+  const handleBanUser = (user: User) => {
     setActionUser(user)
     setShowBanModal(true)
   }
 
-  const handleResetPassword = (user: any) => {
+  const handleResetPassword = (user: User) => {
     setActionUser(user)
     setShowResetModal(true)
   }
 
   const confirmBan = () => {
-    console.log(`Banning user ${actionUser.email} for reason: ${banReason}`)
+    if (actionUser) {
+      console.log(`Banning user ${actionUser.email} for reason: ${banReason}`)
+    }
     setShowBanModal(false)
     setActionUser(null)
     setBanReason('')
   }
 
   const confirmPasswordReset = () => {
-    console.log(`Resetting password for user ${actionUser.email}`)
+    if (actionUser) {
+      console.log(`Resetting password for user ${actionUser.email}`)
+    }
     setShowResetModal(false)
     setActionUser(null)
   }
@@ -664,7 +682,7 @@ export default function UserManagementPage() {
             </h2>
             <div style={{ marginBottom: '24px' }}>
               <div style={{ color: '#f59e0b', marginBottom: '16px' }}>
-                🔑 This will generate a new temporary password and send reset instructions to the user's email.
+                🔑 This will generate a new temporary password and send reset instructions to the user&apos;s email.
               </div>
               <div style={{ color: '#999', fontSize: '14px' }}>
                 User email: <span style={{ color: '#00ffff' }}>{actionUser.email}</span>

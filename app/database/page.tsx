@@ -3,13 +3,35 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+interface DatabaseTable {
+  name: string
+  schema: string
+  rowCount: number
+  sizeBytes: number
+  sizeMB: string
+  lastUpdated: string
+  columns: number
+  indexes: number
+  primaryKey: string
+}
+
+interface QueryResult {
+  success: boolean
+  data?: unknown[]
+  error?: string
+  rowCount?: number
+  rows?: unknown[]
+  executionTime?: string
+  rowsAffected?: number
+}
+
 export default function DatabasePage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [selectedTable, setSelectedTable] = useState<any>(null)
+  const [selectedTable, setSelectedTable] = useState<DatabaseTable | null>(null)
   const [showSqlModal, setShowSqlModal] = useState(false)
   const [sqlQuery, setSqlQuery] = useState('')
-  const [queryResult, setQueryResult] = useState<any>(null)
+  const [queryResult, setQueryResult] = useState<QueryResult | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -272,6 +294,7 @@ export default function DatabasePage() {
     console.log('Executing SQL:', sqlQuery)
     // Mock query result
     setQueryResult({
+      success: true,
       rows: [
         { id: 1, name: 'John Doe', email: 'john@example.com', status: 'ACTIVE' },
         { id: 2, name: 'Jane Smith', email: 'jane@example.com', status: 'ACTIVE' }
