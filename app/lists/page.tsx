@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { CuratedList, CuratedListStats } from '@/lib/services/curated-lists'
 
-interface List {
-  id: number
+interface DisplayList {
+  id: string
   name: string
   publisher: string
   places: number
@@ -15,18 +16,25 @@ interface List {
   link_url: string
   views: number
   likes: number
+  visibility: string
+  location_scope: string | null
+  curator_priority: number
 }
 
 export default function ListManagementPage() {
   const { loading, authenticated, signOut } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedList, setSelectedList] = useState<List | null>(null)
+  const [selectedList, setSelectedList] = useState<DisplayList | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [lists, setLists] = useState<DisplayList[]>([])
+  const [stats, setStats] = useState<CuratedListStats | null>(null)
+  const [loadingData, setLoadingData] = useState(true)
   const [newListData, setNewListData] = useState({
     name: '',
-    publisher: '',
-    photo: '',
-    link_url: ''
+    publisher_name: '',
+    description: '',
+    location_scope: '',
+    external_link: ''
   })
   const router = useRouter()
 
@@ -38,7 +46,64 @@ export default function ListManagementPage() {
     router.push('/')
   }
 
-  if (loading) {
+  const getDisplayStatus = (visibility: string): string => {
+    switch (visibility) {
+      case 'public': return 'ACTIVE'
+      case 'curated': return 'ACTIVE'
+      case 'private': return 'HIDDEN'
+      default: return 'DRAFT'
+    }
+  }
+
+  const loadData = useCallback(async () => {
+    setLoadingData(true)
+    try {
+      // Load both stats and lists in parallel
+      const [statsResponse, listsResponse] = await Promise.all([
+        fetch('/api/admin/stats'),
+        fetch('/api/admin/lists')
+      ])
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setStats(statsData)
+      }
+
+      if (listsResponse.ok) {
+        const listsData: CuratedList[] = await listsResponse.json()
+        // Transform to display format
+        const displayLists: DisplayList[] = listsData.map(list => ({
+          id: list.id,
+          name: list.name,
+          publisher: list.publisher_name || 'Unknown',
+          places: 0, // TODO: Get place count from list_places
+          created: new Date(list.created_at).toLocaleDateString(),
+          status: getDisplayStatus(list.visibility),
+          photo: list.publisher_logo_url || '',
+          link_url: list.external_link || '',
+          views: 0, // TODO: Add view tracking
+          likes: 0, // TODO: Add like tracking
+          visibility: list.visibility,
+          location_scope: list.location_scope,
+          curator_priority: list.curator_priority
+        }))
+        setLists(displayLists)
+      }
+    } catch (error) {
+      console.error('Failed to load data:', error)
+    } finally {
+      setLoadingData(false)
+    }
+  }, [])
+
+  // Load data on component mount
+  useEffect(() => {
+    if (authenticated) {
+      loadData()
+    }
+  }, [authenticated, loadData])
+
+  if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -52,70 +117,6 @@ export default function ListManagementPage() {
   if (!authenticated) {
     return null
   }
-
-  // Mock data for lists
-  const mockLists = [
-    { 
-      id: 1, 
-      name: 'Best Coffee Shops in SF', 
-      publisher: 'john_doe', 
-      places: 24, 
-      created: '2024-01-15', 
-      status: 'ACTIVE',
-      photo: 'https://example.com/coffee.jpg',
-      link_url: 'https://placemarks.app/lists/coffee-sf',
-      views: 1247,
-      likes: 89
-    },
-    { 
-      id: 2, 
-      name: 'Hidden Gems NYC', 
-      publisher: 'jane_smith', 
-      places: 67, 
-      created: '2024-01-20', 
-      status: 'ACTIVE',
-      photo: 'https://example.com/nyc.jpg',
-      link_url: 'https://placemarks.app/lists/hidden-nyc',
-      views: 2156,
-      likes: 234
-    },
-    { 
-      id: 3, 
-      name: 'Weekend Hiking Spots', 
-      publisher: 'outdoor_explorer', 
-      places: 15, 
-      created: '2024-02-01', 
-      status: 'HIDDEN',
-      photo: 'https://example.com/hiking.jpg',
-      link_url: 'https://placemarks.app/lists/hiking',
-      views: 892,
-      likes: 67
-    },
-    { 
-      id: 4, 
-      name: 'Food Truck Favorites', 
-      publisher: 'foodie_mike', 
-      places: 32, 
-      created: '2024-02-10', 
-      status: 'ACTIVE',
-      photo: 'https://example.com/foodtruck.jpg',
-      link_url: 'https://placemarks.app/lists/food-trucks',
-      views: 743,
-      likes: 45
-    },
-    { 
-      id: 5, 
-      name: 'Art & Culture Guide', 
-      publisher: 'culture_curator', 
-      places: 28, 
-      created: '2024-02-15', 
-      status: 'DRAFT',
-      photo: 'https://example.com/art.jpg',
-      link_url: 'https://placemarks.app/lists/art-culture',
-      views: 234,
-      likes: 12
-    }
-  ]
 
   const dashboardStyles = {
     metricsCard: {
@@ -219,7 +220,7 @@ export default function ListManagementPage() {
     }
   }
 
-  const filteredLists = mockLists.filter(list => 
+  const filteredLists = lists.filter(list => 
     list.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     list.publisher.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -233,16 +234,58 @@ export default function ListManagementPage() {
     }
   }
 
-  const handleCreateList = () => {
-    // Handle list creation logic here
-    console.log('Creating list:', newListData)
-    setShowCreateModal(false)
-    setNewListData({ name: '', publisher: '', photo: '', link_url: '' })
+  const handleCreateList = async () => {
+    try {
+      const response = await fetch('/api/admin/lists', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newListData)
+      })
+
+      if (response.ok) {
+        setShowCreateModal(false)
+        setNewListData({ 
+          name: '', 
+          publisher_name: '', 
+          description: '', 
+          location_scope: '', 
+          external_link: '' 
+        })
+        loadData() // Refresh the list
+      } else {
+        console.error('Failed to create list')
+      }
+    } catch (error) {
+      console.error('Error creating list:', error)
+    }
   }
 
-  const handleListAction = (action: string, listId: number) => {
-    console.log(`${action} list ${listId}`)
-    // Handle list actions here
+  const handleListAction = async (action: string, listId: string) => {
+    try {
+      if (action === 'delete') {
+        const response = await fetch(`/api/admin/lists/${listId}`, {
+          method: 'DELETE'
+        })
+        if (response.ok) {
+          loadData() // Refresh the list
+        }
+      } else if (action === 'hide' || action === 'show') {
+        const list = lists.find(l => l.id === listId)
+        if (list) {
+          const newVisibility = action === 'hide' ? 'private' : 'public'
+          const response = await fetch(`/api/admin/lists/${listId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visibility: newVisibility })
+          })
+          if (response.ok) {
+            loadData() // Refresh the list
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error ${action}ing list:`, error)
+    }
   }
 
   return (
@@ -319,9 +362,9 @@ export default function ListManagementPage() {
                <h3 style={dashboardStyles.metricLabel}>Total Lists</h3>
                <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
              </div>
-             <div style={dashboardStyles.metricValue}>147</div>
+             <div style={dashboardStyles.metricValue}>{stats?.total_curated_lists || 0}</div>
              <div style={{ fontSize: '14px', color: '#10b981' }}>
-               +12 <span style={{ color: '#666', marginLeft: '8px' }}>this month</span>
+               {stats?.publishers_count || 0} <span style={{ color: '#666', marginLeft: '8px' }}>publishers</span>
              </div>
            </div>
 
@@ -330,9 +373,9 @@ export default function ListManagementPage() {
                <h3 style={dashboardStyles.metricLabel}>Unique Places</h3>
                <div style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '50%' }}></div>
              </div>
-             <div style={dashboardStyles.metricValue}>2,847</div>
+             <div style={dashboardStyles.metricValue}>{stats?.total_places_in_curated_lists || 0}</div>
              <div style={{ fontSize: '14px', color: '#3b82f6' }}>
-               87% <span style={{ color: '#666', marginLeft: '8px' }}>of total places</span>
+               {stats?.avg_places_per_list?.toFixed(1) || 0} <span style={{ color: '#666', marginLeft: '8px' }}>avg per list</span>
              </div>
            </div>
 
@@ -341,20 +384,20 @@ export default function ListManagementPage() {
                <h3 style={dashboardStyles.metricLabel}>% Private</h3>
                <div style={{ width: '8px', height: '8px', backgroundColor: '#f59e0b', borderRadius: '50%' }}></div>
              </div>
-             <div style={dashboardStyles.metricValue}>23%</div>
+             <div style={dashboardStyles.metricValue}>{stats?.private_percentage || 0}%</div>
              <div style={{ fontSize: '14px', color: '#f59e0b' }}>
-               34 <span style={{ color: '#666', marginLeft: '8px' }}>private lists</span>
+               {stats?.private_lists || 0} <span style={{ color: '#666', marginLeft: '8px' }}>private lists</span>
              </div>
            </div>
 
            <div style={dashboardStyles.metricsCard}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-               <h3 style={dashboardStyles.metricLabel}>Total Views</h3>
+               <h3 style={dashboardStyles.metricLabel}>Location Scopes</h3>
                <div style={{ width: '8px', height: '8px', backgroundColor: '#8b5cf6', borderRadius: '50%' }}></div>
              </div>
-             <div style={dashboardStyles.metricValue}>89.2K</div>
+             <div style={dashboardStyles.metricValue}>{stats?.location_scopes_count || 0}</div>
              <div style={{ fontSize: '14px', color: '#8b5cf6' }}>
-               +15% <span style={{ color: '#666', marginLeft: '8px' }}>vs last month</span>
+               {stats?.public_lists || 0} <span style={{ color: '#666', marginLeft: '8px' }}>public lists</span>
              </div>
            </div>
          </div>
@@ -487,38 +530,50 @@ export default function ListManagementPage() {
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Publisher
+                  Publisher Name
                 </label>
                 <input
                   type="text"
-                  value={newListData.publisher}
-                  onChange={(e) => setNewListData({...newListData, publisher: e.target.value})}
+                  value={newListData.publisher_name}
+                  onChange={(e) => setNewListData({...newListData, publisher_name: e.target.value})}
                   style={dashboardStyles.input}
-                  placeholder="Enter publisher username..."
+                  placeholder="Enter publisher name..."
                 />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Cover Photo URL
+                  Description
                 </label>
                 <input
                   type="text"
-                  value={newListData.photo}
-                  onChange={(e) => setNewListData({...newListData, photo: e.target.value})}
+                  value={newListData.description}
+                  onChange={(e) => setNewListData({...newListData, description: e.target.value})}
                   style={dashboardStyles.input}
-                  placeholder="Enter photo URL..."
+                  placeholder="Enter list description..."
                 />
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  List URL
+                  Location Scope
                 </label>
                 <input
                   type="text"
-                  value={newListData.link_url}
-                  onChange={(e) => setNewListData({...newListData, link_url: e.target.value})}
+                  value={newListData.location_scope}
+                  onChange={(e) => setNewListData({...newListData, location_scope: e.target.value})}
                   style={dashboardStyles.input}
-                  placeholder="Enter list URL..."
+                  placeholder="e.g., Bangkok, Sukhumvit..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  External Link
+                </label>
+                <input
+                  type="text"
+                  value={newListData.external_link}
+                  onChange={(e) => setNewListData({...newListData, external_link: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter external link..."
                 />
               </div>
               <div style={{ marginTop: '16px' }}>

@@ -1,5 +1,3 @@
-// TODO: Paste your database schema definitions here.
-
 export type Json =
   | string
   | number
@@ -10,11 +8,190 @@ export type Json =
 
 export type Database = {
   public: {
-    Tables: Record<string, never>
-    Views: Record<string, never>
-    Functions: Record<string, never>
-    Enums: Record<string, never>
-    CompositeTypes: Record<string, never>
+    Tables: {
+      lists: {
+        Row: {
+          id: string
+          user_id: string | null
+          name: string
+          auto_generated: boolean
+          visibility: 'private' | 'friends' | 'public' | 'curated'
+          description: string | null
+          list_type: string | null
+          icon: string | null
+          color: string | null
+          type: 'user' | 'auto' | 'curated' | null
+          is_default: boolean
+          is_curated: boolean
+          publisher_name: string | null
+          publisher_logo_url: string | null
+          external_link: string | null
+          location_scope: string | null
+          curator_priority: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          name: string
+          auto_generated?: boolean
+          visibility?: 'private' | 'friends' | 'public' | 'curated'
+          description?: string | null
+          list_type?: string | null
+          icon?: string | null
+          color?: string | null
+          type?: 'user' | 'auto' | 'curated' | null
+          is_default?: boolean
+          is_curated?: boolean
+          publisher_name?: string | null
+          publisher_logo_url?: string | null
+          external_link?: string | null
+          location_scope?: string | null
+          curator_priority?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          name?: string
+          auto_generated?: boolean
+          visibility?: 'private' | 'friends' | 'public' | 'curated'
+          description?: string | null
+          list_type?: string | null
+          icon?: string | null
+          color?: string | null
+          type?: 'user' | 'auto' | 'curated' | null
+          is_default?: boolean
+          is_curated?: boolean
+          publisher_name?: string | null
+          publisher_logo_url?: string | null
+          external_link?: string | null
+          location_scope?: string | null
+          curator_priority?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      places: {
+        Row: {
+          id: string
+          google_place_id: string
+          name: string
+          address: string
+          coordinates: unknown // PostGIS Point
+          place_type: string | null
+          google_types: string[] | null
+          primary_type: string | null
+          price_level: number | null
+          city_context: Json | null
+          bangkok_context: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          google_place_id: string
+          name: string
+          address: string
+          coordinates: unknown
+          place_type?: string | null
+          google_types?: string[] | null
+          primary_type?: string | null
+          price_level?: number | null
+          city_context?: Json | null
+          bangkok_context?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          google_place_id?: string
+          name?: string
+          address?: string
+          coordinates?: unknown
+          place_type?: string | null
+          google_types?: string[] | null
+          primary_type?: string | null
+          price_level?: number | null
+          city_context?: Json | null
+          bangkok_context?: Json | null
+          created_at?: string
+        }
+      }
+      list_places: {
+        Row: {
+          list_id: string
+          place_id: string
+          added_at: string
+          notes: string | null
+        }
+        Insert: {
+          list_id: string
+          place_id: string
+          added_at?: string
+          notes?: string | null
+        }
+        Update: {
+          list_id?: string
+          place_id?: string
+          added_at?: string
+          notes?: string | null
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      get_curated_lists: {
+        Args: {
+          p_location_scope?: string | null
+          p_list_type?: string | null
+          p_publisher_name?: string | null
+          p_min_priority?: number | null
+        }
+        Returns: Database['public']['Tables']['lists']['Row'][]
+      }
+      get_curated_list_with_places: {
+        Args: {
+          list_uuid: string
+        }
+        Returns: (Database['public']['Tables']['lists']['Row'] & {
+          places: Database['public']['Tables']['places']['Row'][]
+        })[]
+      }
+      get_curated_lists_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_curated_lists: number
+          total_places_in_curated_lists: number
+          publishers_count: number
+          location_scopes_count: number
+          avg_places_per_list: number
+          most_recent_update: string
+        }[]
+      }
+      search_places_near_location: {
+        Args: {
+          lat: number
+          lng: number
+          radius_meters?: number
+        }
+        Returns: Database['public']['Tables']['places']['Row'][]
+      }
+      update_curator_priorities: {
+        Args: {
+          list_priorities: string
+        }
+        Returns: void
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
