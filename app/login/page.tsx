@@ -76,7 +76,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-full max-w-md p-8">
+      <div className="w-full max-w-lg p-8">
         {/* Simple title with cursor */}
         <div className="text-center mb-12">
           <h1 className="text-2xl text-white mb-2">PLACEMARKS</h1>
@@ -95,6 +95,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="form-input"
               placeholder="EMAIL"
+              autoComplete="email"
               required
             />
           </div>
@@ -106,6 +107,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="form-input"
               placeholder="PASSWORD"
+              autoComplete="current-password"
               required
             />
           </div>

@@ -45,6 +45,10 @@ body {
   max-width: 28rem;
 }
 
+.max-w-lg {
+  max-width: 32rem;
+}
+
 .max-w-4xl {
   max-width: 56rem;
 }
