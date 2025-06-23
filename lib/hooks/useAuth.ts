@@ -9,9 +9,27 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
+  
+  // Only create Supabase client in browser environment
+  const [supabase] = useState(() => {
+    if (typeof window === 'undefined') {
+      return null
+    }
+    try {
+      return createClient()
+    } catch (error) {
+      console.error('Failed to create Supabase client:', error)
+      return null
+    }
+  })
 
   useEffect(() => {
+    // Skip auth check during server-side rendering
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       
@@ -37,9 +55,10 @@ export function useAuth() {
     })
 
     return () => subscription.unsubscribe()
-  }, [router, supabase.auth])
+  }, [router, supabase])
 
   const signOut = async () => {
+    if (!supabase) return
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
