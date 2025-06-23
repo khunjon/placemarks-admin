@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClient, type SupabaseClient } from '@/lib/supabase/client'
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic'
@@ -12,11 +12,29 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [supabase, setSupabase] = useState<SupabaseClient>(null)
   const router = useRouter()
-  const supabase = createClient()
+
+  // Initialize Supabase client only on the client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const client = createClient()
+      setSupabase(client)
+      
+      if (!client) {
+        setError('Configuration error: Please check your environment variables.')
+      }
+    }
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!supabase) {
+      setError('CONFIGURATION ERROR')
+      return
+    }
+    
     setLoading(true)
     setError('')
 
@@ -42,6 +60,18 @@ export default function LoginPage() {
     }
     
     setLoading(false)
+  }
+
+  // Show loading state while initializing
+  if (typeof window !== 'undefined' && !supabase && !error) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-white text-lg">INITIALIZING</div>
+          <div className="cursor mx-auto mt-2"></div>
+        </div>
+      </div>
+    )
   }
 
   return (

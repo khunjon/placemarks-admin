@@ -19,8 +19,11 @@ interface Place {
   website: string
 }
 
+// Force dynamic rendering to prevent static generation issues
+export const dynamic = 'force-dynamic'
+
 export default function PlaceManagementPage() {
-  const { loading, authenticated, signOut } = useAuth()
+  const { loading, authenticated, error, signOut } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -41,6 +44,23 @@ export default function PlaceManagementPage() {
         <div className="text-center">
           <div className="text-white text-lg">LOADING</div>
           <div className="cursor mx-auto mt-2"></div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-lg">ERROR</div>
+          <div className="text-white text-sm mt-2">{error}</div>
+          <button 
+            onClick={() => router.push('/login')} 
+            className="mt-4 px-4 py-2 bg-cyan-500 text-black rounded"
+          >
+            GO TO LOGIN
+          </button>
         </div>
       </div>
     )
