@@ -64,7 +64,8 @@ export class GooglePlacesCacheService {
       }
 
       return data ?? []
-    } catch (_error) {
+    } catch (error) {
+      console.log('❌ [Cache] Search failed:', error)
       return []
     }
   }
@@ -127,8 +128,9 @@ export class GooglePlacesCacheService {
           onConflict: 'google_place_id',
           ignoreDuplicates: false 
         })
-    } catch (_error) {
-      // Silently fail cache operations
+    } catch (error) {
+      // Silently fail cache operations - log for debugging
+      console.log('❌ [Cache] Cache operation failed:', error)
     }
   }
 
