@@ -105,6 +105,18 @@ export default function ListManagementPage() {
     }
   }, [authenticated, loadData])
 
+  // Filtering and sorting logic - moved before early returns to comply with Rules of Hooks
+  const filteredLists = lists.filter(list => 
+    list.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    list.publisher.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
+  // Initialize sorting with default sort by name
+  const { sortedData, handleSort, getSortIcon } = useSorting(filteredLists, { 
+    key: 'name', 
+    direction: 'asc' 
+  })
+
   if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -221,17 +233,6 @@ export default function ListManagementPage() {
       overflow: 'auto'
     }
   }
-
-  const filteredLists = lists.filter(list => 
-    list.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    list.publisher.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
-  // Initialize sorting with default sort by name
-  const { sortedData, handleSort, getSortIcon } = useSorting(filteredLists, { 
-    key: 'name', 
-    direction: 'asc' 
-  })
 
   const getStatusColor = (status: string) => {
     switch (status) {
