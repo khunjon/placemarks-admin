@@ -64,7 +64,7 @@ export class GooglePlacesCacheService {
       }
 
       return data ?? []
-    } catch (error) {
+    } catch (_error) {
       return []
     }
   }
@@ -127,7 +127,7 @@ export class GooglePlacesCacheService {
           onConflict: 'google_place_id',
           ignoreDuplicates: false 
         })
-    } catch (error) {
+    } catch (_error) {
       // Silently fail cache operations
     }
   }
