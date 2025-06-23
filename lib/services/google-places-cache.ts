@@ -85,7 +85,7 @@ export class GooglePlacesCacheService {
       const { data, error } = await this.supabase!
         .from('google_places_cache')
         .select('*')
-        .eq('place_id', placeId)
+        .eq('google_place_id', placeId)
         .gt('expires_at', new Date().toISOString())
         .single()
 
@@ -116,6 +116,7 @@ export class GooglePlacesCacheService {
       const expiresAt = new Date(now.getTime() + (this.CACHE_DURATION_DAYS * 24 * 60 * 60 * 1000))
 
       const cacheEntries = places.map(place => ({
+        google_place_id: place.place_id,
         place_id: place.place_id,
         name: place.name,
         formatted_address: place.formatted_address || place.vicinity,
@@ -131,7 +132,7 @@ export class GooglePlacesCacheService {
       const { error } = await this.supabase!
         .from('google_places_cache')
         .upsert(cacheEntries, { 
-          onConflict: 'place_id',
+          onConflict: 'google_place_id',
           ignoreDuplicates: false 
         })
 
@@ -157,6 +158,7 @@ export class GooglePlacesCacheService {
       const expiresAt = new Date(now.getTime() + (this.CACHE_DURATION_DAYS * 24 * 60 * 60 * 1000))
 
       const cacheEntry = {
+        google_place_id: place.place_id,
         place_id: place.place_id,
         name: place.name,
         formatted_address: place.formatted_address,
@@ -176,7 +178,7 @@ export class GooglePlacesCacheService {
       const { error } = await this.supabase!
         .from('google_places_cache')
         .upsert(cacheEntry, { 
-          onConflict: 'place_id',
+          onConflict: 'google_place_id',
           ignoreDuplicates: false 
         })
 
