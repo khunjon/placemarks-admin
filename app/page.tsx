@@ -35,7 +35,7 @@ export default function HomePage() {
 
       {/* Main Content */}
       <div className="p-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
           <div className="text-center mb-12">
             <p className="text-gray">Select an administrative function</p>
           </div>

@@ -76,7 +76,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-full max-w-lg p-8">
+      <div className="w-full max-w-2xl p-8">
         {/* Simple title with cursor */}
         <div className="text-center mb-12">
           <h1 className="text-2xl text-white mb-2">PLACEMARKS</h1>
