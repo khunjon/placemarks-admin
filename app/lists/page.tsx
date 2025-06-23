@@ -131,6 +131,50 @@ export default function ListManagementPage() {
     }
   }, [])
 
+  // Debounced search function for Google Places
+  const searchPlaces = useCallback(async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      console.log(`🔍 [ListManagement] Searching for places: "${searchTerm}"`)
+      const results = await placesService.searchPlaces(searchTerm.trim())
+      
+      // Format results for the UI
+      const formattedResults = results.map(place => ({
+        id: place.place_id || place.id,
+        name: place.name,
+        address: place.address,
+        lat: place.lat,
+        lng: place.lng
+      }))
+      
+      setSearchResults(formattedResults)
+      console.log(`✅ [ListManagement] Found ${formattedResults.length} places for "${searchTerm}"`)
+    } catch (error) {
+      console.error('❌ [ListManagement] Error searching places:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }, [placesService])
+
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (placeSearchTerm) {
+        searchPlaces(placeSearchTerm)
+      } else {
+        setSearchResults([])
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [placeSearchTerm, searchPlaces])
+
   // Load data on component mount
   useEffect(() => {
     if (authenticated) {
@@ -330,50 +374,6 @@ export default function ListManagementPage() {
       setSelectedPlaces(selectedPlaces.filter(p => p.id !== placeId))
     }
   }
-
-  // Debounced search function for Google Places
-  const searchPlaces = useCallback(async (searchTerm: string) => {
-    if (!searchTerm.trim()) {
-      setSearchResults([])
-      return
-    }
-
-    setIsSearching(true)
-    try {
-      console.log(`🔍 [ListManagement] Searching for places: "${searchTerm}"`)
-      const results = await placesService.searchPlaces(searchTerm.trim())
-      
-      // Format results for the UI
-      const formattedResults = results.map(place => ({
-        id: place.place_id || place.id,
-        name: place.name,
-        address: place.address,
-        lat: place.lat,
-        lng: place.lng
-      }))
-      
-      setSearchResults(formattedResults)
-      console.log(`✅ [ListManagement] Found ${formattedResults.length} places for "${searchTerm}"`)
-    } catch (error) {
-      console.error('❌ [ListManagement] Error searching places:', error)
-      setSearchResults([])
-    } finally {
-      setIsSearching(false)
-    }
-  }, [placesService])
-
-  // Debounce search to avoid too many API calls
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (placeSearchTerm) {
-        searchPlaces(placeSearchTerm)
-      } else {
-        setSearchResults([])
-      }
-    }, 500) // 500ms debounce
-
-    return () => clearTimeout(timeoutId)
-  }, [placeSearchTerm, searchPlaces])
 
   const handleEditList = (list: DisplayList) => {
     setEditListData({
@@ -933,7 +933,7 @@ export default function ListManagementPage() {
                           fontSize: '14px',
                           fontStyle: 'italic'
                         }}>
-                          No places found for "{placeSearchTerm}"
+                          No places found for &quot;{placeSearchTerm}&quot;
                         </div>
                       )}
                     </div>
@@ -1179,7 +1179,7 @@ export default function ListManagementPage() {
                           fontSize: '14px',
                           fontStyle: 'italic'
                         }}>
-                          No places found for "{placeSearchTerm}"
+                          No places found for &quot;{placeSearchTerm}&quot;
                         </div>
                       )}
                     </div>

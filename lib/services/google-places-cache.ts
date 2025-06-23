@@ -52,7 +52,7 @@ export class GooglePlacesCacheService {
     console.log(`🔍 [GooglePlacesCache] Searching cache for: "${query}"`)
     
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.supabase!
         .from('google_places_cache')
         .select('*')
         .or(`name.ilike.%${query}%,formatted_address.ilike.%${query}%`)
@@ -65,7 +65,7 @@ export class GooglePlacesCacheService {
         return []
       }
 
-      const results = data || []
+      const results = data ?? []
       console.log(`✅ [GooglePlacesCache] Found ${results.length} cached results for "${query}"`)
       return results
     } catch (error) {
@@ -81,7 +81,7 @@ export class GooglePlacesCacheService {
     console.log(`🔍 [GooglePlacesCache] Looking up place_id: ${placeId}`)
     
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.supabase!
         .from('google_places_cache')
         .select('*')
         .eq('place_id', placeId)
@@ -126,7 +126,7 @@ export class GooglePlacesCacheService {
         expires_at: expiresAt.toISOString()
       }))
 
-      const { error } = await this.supabase
+      const { error } = await this.supabase!
         .from('google_places_cache')
         .upsert(cacheEntries, { 
           onConflict: 'place_id',
