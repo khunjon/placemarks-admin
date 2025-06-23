@@ -25,8 +25,11 @@ export function createClient() {
   // Validate URL format
   try {
     new URL(supabaseUrl)
-  } catch {
+    console.log('URL validation passed')
+  } catch (error) {
     console.error('Invalid NEXT_PUBLIC_SUPABASE_URL format')
+    console.error('Actual URL value:', supabaseUrl)
+    console.error('URL validation error:', error instanceof Error ? error.message : String(error))
     return null
   }
 
