@@ -111,11 +111,8 @@ export default function ListManagementPage() {
     list.publisher.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Initialize sorting with default sort by name
-  const { sortedData, handleSort, getSortIcon } = useSorting(filteredLists, { 
-    key: 'name', 
-    direction: 'asc' 
-  })
+  // Initialize sorting without default sort to avoid issues with empty data
+  const { sortedData, handleSort, getSortIcon } = useSorting(filteredLists)
 
   if (loading || loadingData) {
     return (

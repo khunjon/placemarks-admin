@@ -20,7 +20,8 @@ export function useSorting<T>(data: T[], initialSort?: SortConfig<T>): UseSortin
   )
 
   const sortedData = useMemo(() => {
-    if (!sortConfig.key || !sortConfig.direction) {
+    // Return data as-is if empty or no sorting configured
+    if (!data.length || !sortConfig.key || !sortConfig.direction) {
       return data
     }
 
