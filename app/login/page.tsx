@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -9,19 +10,34 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    // Demo authentication
-    if (email === 'admin@placemarks.xyz' && password === 'password') {
-      localStorage.setItem('authenticated', 'true')
-      router.push('/')
-    } else {
-      setError('ACCESS DENIED')
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (authError) {
+        setError('INVALID CREDENTIALS')
+        setLoading(false)
+        return
+      }
+
+      if (data.user) {
+        // Successfully authenticated
+        router.push('/')
+        router.refresh()
+      }
+    } catch (err) {
+      setError('AUTHENTICATION ERROR')
     }
+    
     setLoading(false)
   }
 
@@ -76,9 +92,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Demo credentials */}
+        {/* Admin Login */}
         <div className="mt-12 text-center text-xs text-gray-dark">
-          <div>Demo: admin@placemarks.xyz / password</div>
+          <div>Admin access required</div>
         </div>
       </div>
     </div>

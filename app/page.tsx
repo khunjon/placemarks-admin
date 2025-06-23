@@ -1,23 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/useAuth'
 import AdminHeader from '../components/AdminHeader'
 
 export default function HomePage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
   const router = useRouter()
-
-  useEffect(() => {
-    const auth = localStorage.getItem('authenticated')
-    if (auth === 'true') {
-      setAuthenticated(true)
-    } else {
-      router.push('/login')
-    }
-    setLoading(false)
-  }, [router])
+  const { loading, authenticated } = useAuth()
 
 
 

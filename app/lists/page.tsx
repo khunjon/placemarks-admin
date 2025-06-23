@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface List {
   id: number
@@ -17,8 +18,7 @@ interface List {
 }
 
 export default function ListManagementPage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const { loading, authenticated, signOut } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedList, setSelectedList] = useState<List | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -30,19 +30,8 @@ export default function ListManagementPage() {
   })
   const router = useRouter()
 
-  useEffect(() => {
-    const auth = localStorage.getItem('authenticated')
-    if (auth === 'true') {
-      setAuthenticated(true)
-    } else {
-      router.push('/login')
-    }
-    setLoading(false)
-  }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated')
-    router.push('/login')
+  const handleLogout = async () => {
+    await signOut()
   }
 
   const goBack = () => {

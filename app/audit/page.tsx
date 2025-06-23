@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface AuditLog {
   id: number
@@ -19,8 +20,7 @@ interface AuditLog {
 }
 
 export default function AuditPage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const { loading, authenticated, signOut } = useAuth()
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
   const [filterAction, setFilterAction] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
@@ -28,19 +28,8 @@ export default function AuditPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const router = useRouter()
 
-  useEffect(() => {
-    const auth = localStorage.getItem('authenticated')
-    if (auth === 'true') {
-      setAuthenticated(true)
-    } else {
-      router.push('/login')
-    }
-    setLoading(false)
-  }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated')
-    router.push('/login')
+  const handleLogout = async () => {
+    await signOut()
   }
 
   const goBack = () => {

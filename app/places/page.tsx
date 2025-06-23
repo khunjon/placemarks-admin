@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface Place {
   id: number
@@ -19,27 +20,15 @@ interface Place {
 }
 
 export default function PlaceManagementPage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const { loading, authenticated, signOut } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingPlace, setEditingPlace] = useState<Place | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    const auth = localStorage.getItem('authenticated')
-    if (auth === 'true') {
-      setAuthenticated(true)
-    } else {
-      router.push('/login')
-    }
-    setLoading(false)
-  }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated')
-    router.push('/login')
+  const handleLogout = async () => {
+    await signOut()
   }
 
   const goBack = () => {

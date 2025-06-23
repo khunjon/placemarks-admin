@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface User {
   id: number
@@ -18,8 +19,7 @@ interface User {
 }
 
 export default function UserManagementPage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const { loading, authenticated, signOut } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showBanModal, setShowBanModal] = useState(false)
@@ -28,19 +28,8 @@ export default function UserManagementPage() {
   const [banReason, setBanReason] = useState('')
   const router = useRouter()
 
-  useEffect(() => {
-    const auth = localStorage.getItem('authenticated')
-    if (auth === 'true') {
-      setAuthenticated(true)
-    } else {
-      router.push('/login')
-    }
-    setLoading(false)
-  }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated')
-    router.push('/login')
+  const handleLogout = async () => {
+    await signOut()
   }
 
   const goBack = () => {

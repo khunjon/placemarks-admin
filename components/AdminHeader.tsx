@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface AdminHeaderProps {
   title: string
@@ -10,10 +11,10 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ title, showBackButton = true, lastUpdated = false }: AdminHeaderProps) {
   const router = useRouter()
+  const { signOut } = useAuth()
 
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated')
-    router.push('/login')
+  const handleLogout = async () => {
+    await signOut()
   }
 
   const goBack = () => {

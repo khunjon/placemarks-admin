@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/hooks/useAuth'
 
 interface DatabaseTable {
   name: string
@@ -26,27 +27,15 @@ interface QueryResult {
 }
 
 export default function DatabasePage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const { loading, authenticated, signOut } = useAuth()
   const [selectedTable, setSelectedTable] = useState<DatabaseTable | null>(null)
   const [showSqlModal, setShowSqlModal] = useState(false)
   const [sqlQuery, setSqlQuery] = useState('')
   const [queryResult, setQueryResult] = useState<QueryResult | null>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    const auth = localStorage.getItem('authenticated')
-    if (auth === 'true') {
-      setAuthenticated(true)
-    } else {
-      router.push('/login')
-    }
-    setLoading(false)
-  }, [router])
-
-  const handleLogout = () => {
-    localStorage.removeItem('authenticated')
-    router.push('/login')
+  const handleLogout = async () => {
+    await signOut()
   }
 
   const goBack = () => {
