@@ -46,7 +46,7 @@ export function useAuth() {
           setUser(null)
           // Only redirect to login if we're not already on the login page
           if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-            router.push('/login')
+            router.replace('/login')
           }
         }
       } catch (err) {
@@ -66,7 +66,7 @@ export function useAuth() {
         setUser(null)
         setError(null)
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-          router.push('/login')
+          router.replace('/login')
         }
       } else if (session) {
         setUser(session.user)
@@ -80,16 +80,30 @@ export function useAuth() {
   const signOut = async () => {
     if (!supabase) {
       setError('Cannot sign out: Supabase client not available')
-      return
+      return { success: false, error: 'Supabase client not available' }
     }
     
     try {
-      await supabase.auth.signOut()
-      router.push('/login')
-      router.refresh()
+      const { error: signOutError } = await supabase.auth.signOut()
+      
+      if (signOutError) {
+        console.error('Sign out error:', signOutError)
+        setError('Failed to sign out')
+        return { success: false, error: signOutError.message }
+      }
+      
+      // Clear local state
+      setUser(null)
+      setError(null)
+      
+      // Use replace instead of push to prevent back navigation to authenticated pages
+      router.replace('/login')
+      
+      return { success: true }
     } catch (err) {
       console.error('Sign out error:', err)
       setError('Failed to sign out')
+      return { success: false, error: 'Unexpected error during sign out' }
     }
   }
 

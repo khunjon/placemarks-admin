@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 
@@ -12,9 +13,21 @@ interface AdminHeaderProps {
 export default function AdminHeader({ title, showBackButton = true, lastUpdated = false }: AdminHeaderProps) {
   const router = useRouter()
   const { signOut } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const handleLogout = async () => {
-    await signOut()
+    setIsLoggingOut(true)
+    try {
+      const result = await signOut()
+      if (!result?.success) {
+        // If logout failed, reset loading state
+        setIsLoggingOut(false)
+      }
+      // If successful, we'll be redirected and component will unmount
+    } catch (error) {
+      console.error('Logout error:', error)
+      setIsLoggingOut(false)
+    }
   }
 
   const goBack = () => {
@@ -76,17 +89,26 @@ export default function AdminHeader({ title, showBackButton = true, lastUpdated 
         )}
         <button
           onClick={handleLogout}
-          style={signOutButtonStyle}
+          disabled={isLoggingOut}
+          style={{
+            ...signOutButtonStyle,
+            opacity: isLoggingOut ? 0.6 : 1,
+            cursor: isLoggingOut ? 'not-allowed' : 'pointer'
+          }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#ef4444'
-            e.currentTarget.style.color = '#fff'
+            if (!isLoggingOut) {
+              e.currentTarget.style.backgroundColor = '#ef4444'
+              e.currentTarget.style.color = '#fff'
+            }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#1a1a1a'
-            e.currentTarget.style.color = '#ef4444'
+            if (!isLoggingOut) {
+              e.currentTarget.style.backgroundColor = '#1a1a1a'
+              e.currentTarget.style.color = '#ef4444'
+            }
           }}
         >
-          SIGN OUT
+          {isLoggingOut ? 'SIGNING OUT...' : 'SIGN OUT'}
         </button>
       </div>
     </div>
