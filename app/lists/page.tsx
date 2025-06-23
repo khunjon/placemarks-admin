@@ -134,8 +134,11 @@ export default function ListManagementPage() {
     list.publisher.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  // Initialize sorting without default sort to avoid issues with empty data
-  const { sortedData, handleSort, getSortIcon } = useSorting(filteredLists)
+  // Initialize sorting with default sort by created date DESC (newest first)
+  const { sortedData, handleSort, getSortIcon } = useSorting(filteredLists, {
+    key: 'created',
+    direction: 'desc'
+  })
 
   if (loading || loadingData) {
     return (
@@ -270,6 +273,7 @@ export default function ListManagementPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newListData,
+          visibility: 'private', // Default to Hidden status
           places: selectedPlaces
         })
       })
