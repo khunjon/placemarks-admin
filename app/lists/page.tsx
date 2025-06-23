@@ -106,12 +106,13 @@ export default function ListManagementPage() {
 
       if (listsResponse.ok) {
         const listsData: CuratedList[] = await listsResponse.json()
-        // Transform to display format
+        
+        // Transform to display format (place counts will be updated via API or default to 0)
         const displayLists: DisplayList[] = listsData.map(list => ({
           id: list.id,
           name: list.name,
           publisher: list.publisher_name || 'Unknown',
-          places: 0, // TODO: Get place count from list_places
+          places: 0, // Will be updated by fetching list details if needed
           created: new Date(list.created_at).toLocaleDateString(),
           status: getDisplayStatus(list.visibility),
           photo: list.publisher_logo_url || '',
@@ -140,7 +141,6 @@ export default function ListManagementPage() {
 
     setIsSearching(true)
     try {
-      console.log(`🔍 [ListManagement] Searching for places: "${searchTerm}"`)
       const results = await placesService.searchPlaces(searchTerm.trim())
       
       // Format results for the UI
@@ -153,9 +153,8 @@ export default function ListManagementPage() {
       }))
       
       setSearchResults(formattedResults)
-      console.log(`✅ [ListManagement] Found ${formattedResults.length} places for "${searchTerm}"`)
     } catch (error) {
-      console.error('❌ [ListManagement] Error searching places:', error)
+      console.error('❌ [Places Search] Error:', error)
       setSearchResults([])
     } finally {
       setIsSearching(false)
@@ -384,10 +383,8 @@ export default function ListManagementPage() {
       location_scope: list.location_scope || '',
       external_link: list.link_url || ''
     })
-    // Mock places data for the list - replace with actual API call later
-    setEditSelectedPlaces([
-      { id: 'edit-1', name: 'Example Restaurant', address: '123 Example St, Bangkok' }
-    ])
+    // TODO: Load actual places for this list from API
+    setEditSelectedPlaces([])
     setPlaceSearchTerm('')
     setShowEditModal(true)
   }

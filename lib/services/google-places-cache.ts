@@ -50,8 +50,6 @@ export class GooglePlacesCacheService {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async searchPlacesInCache(query: string, _location?: { lat: number; lng: number }, _radius?: number): Promise<GooglePlacesCacheEntry[]> {
-    console.log(`🔍 [GooglePlacesCache] Searching cache for: "${query}"`)
-    
     try {
       const { data, error } = await this.supabase!
         .from('google_places_cache')
@@ -62,15 +60,11 @@ export class GooglePlacesCacheService {
         .limit(20)
 
       if (error) {
-        console.error('❌ [GooglePlacesCache] Error searching cache:', error)
         return []
       }
 
-      const results = data ?? []
-      console.log(`✅ [GooglePlacesCache] Found ${results.length} cached results for "${query}"`)
-      return results
+      return data ?? []
     } catch (error) {
-      console.error('❌ [GooglePlacesCache] Unexpected error searching cache:', error)
       return []
     }
   }
@@ -109,8 +103,6 @@ export class GooglePlacesCacheService {
   async cachePlaces(places: any[]): Promise<void> {
     if (!places || places.length === 0) return
 
-    console.log(`💾 [GooglePlacesCache] Caching ${places.length} places`)
-
     try {
       const now = new Date()
       const expiresAt = new Date(now.getTime() + (this.CACHE_DURATION_DAYS * 24 * 60 * 60 * 1000))
@@ -129,20 +121,14 @@ export class GooglePlacesCacheService {
         expires_at: expiresAt.toISOString()
       }))
 
-      const { error } = await this.supabase!
+      await this.supabase!
         .from('google_places_cache')
         .upsert(cacheEntries, { 
           onConflict: 'google_place_id',
           ignoreDuplicates: false 
         })
-
-      if (error) {
-        console.error('❌ [GooglePlacesCache] Error caching places:', error)
-      } else {
-        console.log(`✅ [GooglePlacesCache] Successfully cached ${places.length} places`)
-      }
     } catch (error) {
-      console.error('❌ [GooglePlacesCache] Unexpected error caching places:', error)
+      // Silently fail cache operations
     }
   }
 

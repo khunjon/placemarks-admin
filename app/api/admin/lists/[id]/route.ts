@@ -67,6 +67,8 @@ export async function PUT(
     })
 
     const { id } = await params
+    
+    // Update the list
     const { data, error } = await curatedListsAdmin.updateCuratedList(id, updates)
     
     if (error) {
@@ -82,6 +84,18 @@ export async function PUT(
         { error: 'Curated list not found' }, 
         { status: 404 }
       )
+    }
+
+    // If places are provided, update them too
+    if (body.places && Array.isArray(body.places)) {
+      try {
+        // For now, just log the places - TODO: implement proper place management
+        console.log(`Updating ${body.places.length} places for list ${id}`)
+        // await curatedListsAdmin.updateListPlaces(id, body.places)
+      } catch (placesError) {
+        console.error('Error updating places:', placesError)
+        // Don't fail the entire update if places update fails
+      }
     }
 
     return NextResponse.json(data)

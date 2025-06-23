@@ -30,33 +30,27 @@ export class PlacesService {
   async searchPlaces(query: string, location?: { lat: number; lng: number }, radius?: number): Promise<PlaceSearchResult[]> {
     if (!query.trim()) return []
 
-    console.log(`🔍 [PlacesService] Searching for: "${query}"`)
-
     // First, try to get results from cache
     const cachedResults = await this.cacheService.searchPlacesInCache(query, location, radius)
     
     if (cachedResults.length > 0) {
-      console.log(`✅ [PlacesService] Using ${cachedResults.length} cached results for "${query}"`)
       return this.formatCachedResults(cachedResults)
     }
 
     // If no cache results, call Google Places API via our API route
-
     try {
-      console.log(`🌐 [PlacesService] Making Google Places API call for: "${query}"`)
+      console.log(`🌐 [Google Places API] Searching for: "${query}"`)
       const apiResults = await this.callGooglePlacesAPI(query, location, radius)
       
       if (apiResults.length > 0) {
         // Cache the results for future use
         await this.cacheService.cachePlaces(apiResults)
-        console.log(`✅ [PlacesService] API returned ${apiResults.length} results, cached for future use`)
-      } else {
-        console.log(`📭 [PlacesService] No results from Google Places API for: "${query}"`)
+        console.log(`✅ [Google Places API] Found ${apiResults.length} results`)
       }
 
       return this.formatAPIResults(apiResults)
     } catch (error) {
-      console.error('❌ [PlacesService] Error calling Google Places API:', error)
+      console.error('❌ [Google Places API] Error:', error)
       return this.getMockResults(query) // Fallback to mock data on error
     }
   }
