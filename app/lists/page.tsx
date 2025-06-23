@@ -833,11 +833,14 @@ export default function ListManagementPage() {
                     placeholder="Enter external link..."
                   />
                 </div>
-                
-                {/* Google Places Search */}
-                <div style={{ marginTop: '16px' }}>
+              </div>
+
+              {/* Right Column - Add Places */}
+              <div>
+                {/* Add Places Search */}
+                <div style={{ marginBottom: '24px' }}>
                   <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Search Places
+                    Add Places
                   </label>
                   <input
                     type="text"
@@ -855,7 +858,9 @@ export default function ListManagementPage() {
                       border: '1px solid #444',
                       borderRadius: '4px',
                       marginTop: '8px',
-                      backgroundColor: '#2a2a2a'
+                      backgroundColor: '#2a2a2a',
+                      position: 'relative',
+                      zIndex: 10
                     }}>
                       {mockGooglePlacesSearch(placeSearchTerm).map((place) => (
                         <div
@@ -885,10 +890,8 @@ export default function ListManagementPage() {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Right Column - Selected Places */}
-              <div>
+                {/* Selected Places List */}
                 <div style={{ marginBottom: '16px' }}>
                   <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>
                     Selected Places ({selectedPlaces.length})
@@ -899,7 +902,7 @@ export default function ListManagementPage() {
                 </div>
                 
                 <div style={{
-                  maxHeight: '400px',
+                  maxHeight: '320px',
                   overflowY: 'auto',
                   display: 'grid',
                   gap: '12px'
@@ -1054,11 +1057,14 @@ export default function ListManagementPage() {
                     placeholder="Enter external link..."
                   />
                 </div>
-                
-                {/* Google Places Search */}
-                <div style={{ marginTop: '16px' }}>
+              </div>
+
+              {/* Right Column - Add Places */}
+              <div>
+                {/* Add Places Search */}
+                <div style={{ marginBottom: '24px' }}>
                   <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Add More Places
+                    Add Places
                   </label>
                   <input
                     type="text"
@@ -1076,7 +1082,9 @@ export default function ListManagementPage() {
                       border: '1px solid #444',
                       borderRadius: '4px',
                       marginTop: '8px',
-                      backgroundColor: '#2a2a2a'
+                      backgroundColor: '#2a2a2a',
+                      position: 'relative',
+                      zIndex: 10
                     }}>
                       {mockGooglePlacesSearch(placeSearchTerm).map((place) => (
                         <div
@@ -1106,10 +1114,8 @@ export default function ListManagementPage() {
                     </div>
                   )}
                 </div>
-              </div>
 
-              {/* Right Column - Selected Places */}
-              <div>
+                {/* Places in List */}
                 <div style={{ marginBottom: '16px' }}>
                   <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>
                     Places in List ({editSelectedPlaces.length})
@@ -1120,7 +1126,7 @@ export default function ListManagementPage() {
                 </div>
                 
                 <div style={{
-                  maxHeight: '400px',
+                  maxHeight: '320px',
                   overflowY: 'auto',
                   display: 'grid',
                   gap: '12px'
