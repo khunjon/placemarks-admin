@@ -75,6 +75,49 @@ body {
   padding: 2rem;
 }
 
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.py-1 {
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+.pr-12 {
+  padding-right: 3rem;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+/* Position utilities */
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.right-4 {
+  right: 1rem;
+}
+
+.top-1\/2 {
+  top: 50%;
+}
+
+.transform {
+  transform: translateX(var(--tw-translate-x)) translateY(var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.-translate-y-1\/2 {
+  --tw-translate-y: -50%;
+}
+
 .mb-2 {
   margin-bottom: 0.5rem;
 }
@@ -99,6 +142,10 @@ body {
   margin-left: 0.75rem;
 }
 
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
 .mt-2 {
   margin-top: 0.5rem;
 }
@@ -114,6 +161,10 @@ body {
 
 .grid-cols-1 {
   grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.gap-3 {
+  gap: 0.75rem;
 }
 
 .gap-6 {
@@ -170,12 +221,24 @@ body {
   color: #ff4444;
 }
 
+.text-yellow-400 {
+  color: #facc15;
+}
+
+.text-black {
+  color: #000000;
+}
+
 .text-gray {
   color: #888888;
 }
 
 .text-gray-dark {
   color: #555555;
+}
+
+.text-gray-400 {
+  color: #9ca3af;
 }
 
 /* Borders */
@@ -200,6 +263,14 @@ body {
   background-color: transparent;
 }
 
+.bg-yellow-600 {
+  background-color: #ca8a04;
+}
+
+.bg-yellow-500 {
+  background-color: #eab308;
+}
+
 /* Form elements */
 .form-input {
   width: 100%;
@@ -211,6 +282,10 @@ body {
   font-size: 1.125rem;
   font-family: 'Courier New', monospace;
   outline: none;
+}
+
+.form-input.pr-12 {
+  padding-right: 3rem;
 }
 
 .form-input::placeholder {

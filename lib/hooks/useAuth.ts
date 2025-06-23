@@ -9,6 +9,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [sessionWarning, setSessionWarning] = useState(false)
   const router = useRouter()
   
   // Only create Supabase client in browser environment
@@ -42,6 +43,25 @@ export function useAuth() {
         if (session?.user) {
           setUser(session.user)
           setError(null)
+          
+          // Check session expiry and set up warning
+          if (session.expires_at) {
+            const expiresAt = new Date(session.expires_at * 1000)
+            const now = new Date()
+            const timeUntilExpiry = expiresAt.getTime() - now.getTime()
+            
+            // Show warning 5 minutes before expiry
+            const warningTime = timeUntilExpiry - (5 * 60 * 1000)
+            
+            if (warningTime > 0) {
+              setTimeout(() => {
+                setSessionWarning(true)
+              }, warningTime)
+            } else if (timeUntilExpiry <= 5 * 60 * 1000) {
+              // Session expires within 5 minutes
+              setSessionWarning(true)
+            }
+          }
         } else {
           setUser(null)
           // Only redirect to login if we're not already on the login page
@@ -65,12 +85,14 @@ export function useAuth() {
       if (event === 'SIGNED_OUT' || !session) {
         setUser(null)
         setError(null)
+        setSessionWarning(false)
         if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
           router.replace('/login')
         }
       } else if (session) {
         setUser(session.user)
         setError(null)
+        setSessionWarning(false)
       }
     })
 
@@ -107,11 +129,31 @@ export function useAuth() {
     }
   }
 
+  const refreshSession = async () => {
+    if (!supabase) return { success: false, error: 'Supabase client not available' }
+    
+    try {
+      const { data, error } = await supabase.auth.refreshSession()
+      if (error) {
+        console.error('Session refresh error:', error)
+        return { success: false, error: error.message }
+      }
+      
+      setSessionWarning(false)
+      return { success: true, session: data.session }
+    } catch (err) {
+      console.error('Session refresh error:', err)
+      return { success: false, error: 'Failed to refresh session' }
+    }
+  }
+
   return {
     user,
     loading,
     authenticated: !!user,
     error,
-    signOut
+    sessionWarning,
+    signOut,
+    refreshSession
   }
 } 

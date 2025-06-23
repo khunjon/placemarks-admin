@@ -12,8 +12,9 @@ interface AdminHeaderProps {
 
 export default function AdminHeader({ title, showBackButton = true, lastUpdated = false }: AdminHeaderProps) {
   const router = useRouter()
-  const { signOut } = useAuth()
+  const { signOut, sessionWarning, refreshSession } = useAuth()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -27,6 +28,17 @@ export default function AdminHeader({ title, showBackButton = true, lastUpdated 
     } catch (error) {
       console.error('Logout error:', error)
       setIsLoggingOut(false)
+    }
+  }
+
+  const handleRefreshSession = async () => {
+    setIsRefreshing(true)
+    try {
+      await refreshSession()
+    } catch (error) {
+      console.error('Session refresh error:', error)
+    } finally {
+      setIsRefreshing(false)
     }
   }
 
@@ -82,6 +94,20 @@ export default function AdminHeader({ title, showBackButton = true, lastUpdated 
         <div className="cursor ml-3"></div>
       </div>
       <div className="flex items-center gap-6">
+        {sessionWarning && (
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-yellow-400">
+              Session expiring soon
+            </div>
+            <button
+              onClick={handleRefreshSession}
+              disabled={isRefreshing}
+              className="text-xs bg-yellow-600 hover:bg-yellow-500 text-black px-2 py-1 rounded transition-colors"
+            >
+              {isRefreshing ? 'REFRESHING...' : 'EXTEND'}
+            </button>
+          </div>
+        )}
         {lastUpdated && (
           <div className="text-sm text-gray-400">
             Last updated: {new Date().toLocaleTimeString()}
