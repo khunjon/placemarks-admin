@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { CuratedList, CuratedListStats } from '@/lib/services/curated-lists'
 import { useSorting } from '@/lib/hooks/useSorting'
+import { PlacesService } from '@/lib/services/places'
 
 interface DisplayList {
   id: string
@@ -61,6 +62,15 @@ export default function ListManagementPage() {
     lng?: number
   }>>([])
   const [placeSearchTerm, setPlaceSearchTerm] = useState('')
+  const [searchResults, setSearchResults] = useState<Array<{
+    id: string
+    name: string
+    address: string
+    lat?: number
+    lng?: number
+  }>>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [placesService] = useState(() => new PlacesService())
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -321,21 +331,49 @@ export default function ListManagementPage() {
     }
   }
 
-  const mockGooglePlacesSearch = (searchTerm: string) => {
-    // Mock data for Google Places API - replace with actual API call later
-    const mockPlaces = [
-      { id: '1', name: 'Gaggan', address: '68/1 Soi Langsuan, Ploenchit Rd, Bangkok 10330' },
-      { id: '2', name: 'Le Du', address: '399/3 Silom Rd, Bangkok 10500' },
-      { id: '3', name: 'Sorn', address: '56 Sukhumvit 26, Bangkok 10110' },
-      { id: '4', name: 'Blue Elephant', address: '233 S Sathorn Rd, Bangkok 10120' },
-      { id: '5', name: 'Issaya Siamese Club', address: '4 Soi Si Akson, Bangkok 10120' }
-    ]
-    
-    return mockPlaces.filter(place => 
-      place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      place.address.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }
+  // Debounced search function for Google Places
+  const searchPlaces = useCallback(async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setSearchResults([])
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      console.log(`🔍 [ListManagement] Searching for places: "${searchTerm}"`)
+      const results = await placesService.searchPlaces(searchTerm.trim())
+      
+      // Format results for the UI
+      const formattedResults = results.map(place => ({
+        id: place.place_id || place.id,
+        name: place.name,
+        address: place.address,
+        lat: place.lat,
+        lng: place.lng
+      }))
+      
+      setSearchResults(formattedResults)
+      console.log(`✅ [ListManagement] Found ${formattedResults.length} places for "${searchTerm}"`)
+    } catch (error) {
+      console.error('❌ [ListManagement] Error searching places:', error)
+      setSearchResults([])
+    } finally {
+      setIsSearching(false)
+    }
+  }, [placesService])
+
+  // Debounce search to avoid too many API calls
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (placeSearchTerm) {
+        searchPlaces(placeSearchTerm)
+      } else {
+        setSearchResults([])
+      }
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(timeoutId)
+  }, [placeSearchTerm, searchPlaces])
 
   const handleEditList = (list: DisplayList) => {
     setEditListData({
@@ -748,7 +786,7 @@ export default function ListManagementPage() {
         </div>
       </div>
 
-      {/* Create List Modal */}
+            {/* Create List Modal */}
       {showCreateModal && (
         <div style={dashboardStyles.modal}>
           <div style={{ 
@@ -762,81 +800,81 @@ export default function ListManagementPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
               
               {/* Left Column - Form */}
-              <div style={{ display: 'grid', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    List Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newListData.name}
-                    onChange={(e) => setNewListData({...newListData, name: e.target.value})}
-                    style={dashboardStyles.input}
-                    placeholder="Enter list name..."
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Publisher Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newListData.publisher_name}
-                    onChange={(e) => setNewListData({...newListData, publisher_name: e.target.value})}
-                    style={dashboardStyles.input}
-                    placeholder="Enter publisher name..."
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={newListData.description}
-                    onChange={(e) => setNewListData({...newListData, description: e.target.value})}
-                    style={dashboardStyles.input}
-                    placeholder="Enter list description..."
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Location Scope
-                  </label>
-                  <input
-                    type="text"
-                    value={newListData.location_scope}
-                    onChange={(e) => setNewListData({...newListData, location_scope: e.target.value})}
-                    style={dashboardStyles.input}
-                    placeholder="e.g., Bangkok, Sukhumvit..."
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    External Link
-                  </label>
-                  <input
-                    type="text"
-                    value={newListData.external_link}
-                    onChange={(e) => setNewListData({...newListData, external_link: e.target.value})}
-                    style={dashboardStyles.input}
-                    placeholder="Enter external link..."
-                  />
-                </div>
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  List Name
+                </label>
+                <input
+                  type="text"
+                  value={newListData.name}
+                  onChange={(e) => setNewListData({...newListData, name: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter list name..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  Publisher Name
+                </label>
+                <input
+                  type="text"
+                  value={newListData.publisher_name}
+                  onChange={(e) => setNewListData({...newListData, publisher_name: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter publisher name..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={newListData.description}
+                  onChange={(e) => setNewListData({...newListData, description: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter list description..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  Location Scope
+                </label>
+                <input
+                  type="text"
+                  value={newListData.location_scope}
+                  onChange={(e) => setNewListData({...newListData, location_scope: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="e.g., Bangkok, Sukhumvit..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  External Link
+                </label>
+                <input
+                  type="text"
+                  value={newListData.external_link}
+                  onChange={(e) => setNewListData({...newListData, external_link: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter external link..."
+                />
+              </div>
               </div>
 
               {/* Right Column - Add Places */}
               <div>
                 {/* Add Places Search */}
                 <div style={{ marginBottom: '24px' }}>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
                     Add Places
-                  </label>
-                  <input
-                    type="text"
+                </label>
+                <input
+                  type="text"
                     value={placeSearchTerm}
                     onChange={(e) => setPlaceSearchTerm(e.target.value)}
-                    style={dashboardStyles.input}
+                  style={dashboardStyles.input}
                     placeholder="Search for restaurants to add..."
                   />
                   
@@ -852,31 +890,52 @@ export default function ListManagementPage() {
                       position: 'relative',
                       zIndex: 10
                     }}>
-                      {mockGooglePlacesSearch(placeSearchTerm).map((place) => (
-                        <div
-                          key={place.id}
-                          onClick={() => handleAddPlace(place)}
-                          style={{
-                            padding: '12px',
-                            borderBottom: '1px solid #444',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3a3a3a'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent'
-                          }}
-                        >
-                          <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
-                            {place.name}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#999' }}>
-                            {place.address}
-                          </div>
+                      {isSearching ? (
+                        <div style={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          color: '#999',
+                          fontSize: '14px'
+                        }}>
+                          🔍 Searching places...
                         </div>
-                      ))}
+                      ) : searchResults.length > 0 ? (
+                        searchResults.map((place) => (
+                          <div
+                            key={place.id}
+                            onClick={() => handleAddPlace(place)}
+                            style={{
+                              padding: '12px',
+                              borderBottom: '1px solid #444',
+                              cursor: 'pointer',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#3a3a3a'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent'
+                            }}
+                          >
+                            <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                              {place.name}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#999' }}>
+                              {place.address}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          color: '#666',
+                          fontSize: '14px',
+                          fontStyle: 'italic'
+                        }}>
+                          No places found for "{placeSearchTerm}"
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -956,6 +1015,7 @@ export default function ListManagementPage() {
                   setShowCreateModal(false)
                   setSelectedPlaces([])
                   setPlaceSearchTerm('')
+                  setSearchResults([])
                 }}
                 style={{ ...dashboardStyles.buttonSecondary, backgroundColor: 'transparent' }}
               >
@@ -1076,31 +1136,52 @@ export default function ListManagementPage() {
                       position: 'relative',
                       zIndex: 10
                     }}>
-                      {mockGooglePlacesSearch(placeSearchTerm).map((place) => (
-                        <div
-                          key={place.id}
-                          onClick={() => handleAddPlace(place)}
-                          style={{
-                            padding: '12px',
-                            borderBottom: '1px solid #444',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#3a3a3a'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent'
-                          }}
-                        >
-                          <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
-                            {place.name}
-                          </div>
-                          <div style={{ fontSize: '12px', color: '#999' }}>
-                            {place.address}
-                          </div>
+                      {isSearching ? (
+                        <div style={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          color: '#999',
+                          fontSize: '14px'
+                        }}>
+                          🔍 Searching places...
                         </div>
-                      ))}
+                      ) : searchResults.length > 0 ? (
+                        searchResults.map((place) => (
+                          <div
+                            key={place.id}
+                            onClick={() => handleAddPlace(place)}
+                            style={{
+                              padding: '12px',
+                              borderBottom: '1px solid #444',
+                              cursor: 'pointer',
+                              transition: 'background-color 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#3a3a3a'
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent'
+                            }}
+                          >
+                            <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                              {place.name}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#999' }}>
+                              {place.address}
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div style={{
+                          padding: '12px',
+                          textAlign: 'center',
+                          color: '#666',
+                          fontSize: '14px',
+                          fontStyle: 'italic'
+                        }}>
+                          No places found for "{placeSearchTerm}"
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1180,6 +1261,7 @@ export default function ListManagementPage() {
                   setShowEditModal(false)
                   setEditSelectedPlaces([])
                   setPlaceSearchTerm('')
+                  setSearchResults([])
                 }}
                 style={{ ...dashboardStyles.buttonSecondary, backgroundColor: 'transparent' }}
               >
