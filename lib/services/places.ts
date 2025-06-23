@@ -97,6 +97,7 @@ export class PlacesService {
   /**
    * Call Google Places Text Search API via our API route
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async callGooglePlacesAPI(query: string, location?: { lat: number; lng: number }, radius?: number): Promise<any[]> {
     const params = new URLSearchParams({
       query
@@ -128,6 +129,7 @@ export class PlacesService {
   /**
    * Call Google Places Details API (placeholder for future implementation)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async callGooglePlaceDetailsAPI(placeId: string): Promise<any | null> {
     // TODO: Create API route for place details when needed
     console.log(`⚠️ [PlacesService] Place details API not implemented yet for: ${placeId}`)
@@ -137,6 +139,7 @@ export class PlacesService {
   /**
    * Format cached results for the UI
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatCachedResults(cachedResults: any[]): PlaceSearchResult[] {
     return cachedResults.map(place => this.formatCachedResult(place))
   }
@@ -144,6 +147,7 @@ export class PlacesService {
   /**
    * Format a single cached result
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatCachedResult(place: any): PlaceSearchResult {
     return {
       id: place.place_id,
@@ -162,6 +166,7 @@ export class PlacesService {
   /**
    * Format API results for the UI
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatAPIResults(apiResults: any[]): PlaceSearchResult[] {
     return apiResults.map(place => this.formatAPIResult(place))
   }
@@ -169,6 +174,7 @@ export class PlacesService {
   /**
    * Format a single API result
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatAPIResult(place: any): PlaceSearchResult {
     return {
       id: place.place_id,

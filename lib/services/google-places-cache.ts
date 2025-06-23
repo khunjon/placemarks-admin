@@ -48,7 +48,8 @@ export class GooglePlacesCacheService {
   /**
    * Search for places in cache by text query
    */
-  async searchPlacesInCache(query: string, location?: { lat: number; lng: number }, radius?: number): Promise<GooglePlacesCacheEntry[]> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async searchPlacesInCache(query: string, _location?: { lat: number; lng: number }, _radius?: number): Promise<GooglePlacesCacheEntry[]> {
     console.log(`🔍 [GooglePlacesCache] Searching cache for: "${query}"`)
     
     try {
@@ -104,6 +105,7 @@ export class GooglePlacesCacheService {
   /**
    * Cache a place from Google Places API response
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async cachePlaces(places: any[]): Promise<void> {
     if (!places || places.length === 0) return
 
@@ -146,6 +148,7 @@ export class GooglePlacesCacheService {
   /**
    * Cache detailed place information
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async cachePlace(place: any): Promise<void> {
     console.log(`💾 [GooglePlacesCache] Caching detailed place: ${place.name}`)
 
@@ -170,7 +173,7 @@ export class GooglePlacesCacheService {
         expires_at: expiresAt.toISOString()
       }
 
-      const { error } = await this.supabase
+      const { error } = await this.supabase!
         .from('google_places_cache')
         .upsert(cacheEntry, { 
           onConflict: 'place_id',
@@ -195,10 +198,10 @@ export class GooglePlacesCacheService {
       const now = new Date().toISOString()
 
       const [totalResult, expiredResult] = await Promise.all([
-        this.supabase
+        this.supabase!
           .from('google_places_cache')
           .select('place_id', { count: 'exact', head: true }),
-        this.supabase
+        this.supabase!
           .from('google_places_cache')
           .select('place_id', { count: 'exact', head: true })
           .lt('expires_at', now)
@@ -224,7 +227,7 @@ export class GooglePlacesCacheService {
     console.log('🧹 [GooglePlacesCache] Cleaning up expired entries')
 
     try {
-      const { data, error } = await this.supabase
+      const { data, error } = await this.supabase!
         .from('google_places_cache')
         .delete()
         .lt('expires_at', new Date().toISOString())
