@@ -697,23 +697,9 @@ export default function ListManagementPage() {
                 {sortedData.map((list) => (
                   <tr key={list.id}>
                     <td style={dashboardStyles.tableCell}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ 
-                          width: '40px', 
-                          height: '40px', 
-                          backgroundColor: '#333', 
-                          borderRadius: '4px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '12px'
-                        }}>
-                          IMG
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: '600' }}>{list.name}</div>
-                          <div style={{ fontSize: '12px', color: '#999' }}>{list.link_url}</div>
-                        </div>
+                      <div>
+                        <div style={{ fontWeight: '600' }}>{list.name}</div>
+                        <div style={{ fontSize: '12px', color: '#999' }}>{list.link_url}</div>
                       </div>
                     </td>
                     <td style={dashboardStyles.tableCell}>{list.created}</td>
