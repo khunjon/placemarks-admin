@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { CuratedList, CuratedListStats } from '@/lib/services/curated-lists'
+import { useSorting } from '@/lib/hooks/useSorting'
+import { SortableHeader } from '@/components/SortableHeader'
 
 interface DisplayList {
   id: string
@@ -225,6 +227,12 @@ export default function ListManagementPage() {
     list.publisher.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Initialize sorting with default sort by name
+  const { sortedData, handleSort, getSortIcon } = useSorting(filteredLists, { 
+    key: 'name', 
+    direction: 'asc' 
+  })
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ACTIVE': return '#10b981'
@@ -423,21 +431,64 @@ export default function ListManagementPage() {
           {/* Lists Table */}
           <div style={{ ...dashboardStyles.chartContainer, gridColumn: '1 / -1' }}>
             <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>
-              Curated Lists ({filteredLists.length})
+              Curated Lists ({sortedData.length})
             </h3>
             <table style={dashboardStyles.metricsTable}>
               <thead>
                 <tr>
-                  <th style={dashboardStyles.tableHeader}>List Name</th>
-                  <th style={dashboardStyles.tableHeader}>Publisher</th>
-                  <th style={dashboardStyles.tableHeader}>Places</th>
-                  <th style={dashboardStyles.tableHeader}>Views</th>
-                  <th style={dashboardStyles.tableHeader}>Status</th>
+                  <SortableHeader 
+                    sortKey="name" 
+                    onSort={handleSort} 
+                    getSortIcon={getSortIcon}
+                    style={dashboardStyles.tableHeader}
+                  >
+                    List Name
+                  </SortableHeader>
+                  <SortableHeader 
+                    sortKey="created" 
+                    onSort={handleSort} 
+                    getSortIcon={getSortIcon}
+                    style={dashboardStyles.tableHeader}
+                  >
+                    Created
+                  </SortableHeader>
+                  <SortableHeader 
+                    sortKey="publisher" 
+                    onSort={handleSort} 
+                    getSortIcon={getSortIcon}
+                    style={dashboardStyles.tableHeader}
+                  >
+                    Publisher
+                  </SortableHeader>
+                  <SortableHeader 
+                    sortKey="places" 
+                    onSort={handleSort} 
+                    getSortIcon={getSortIcon}
+                    style={dashboardStyles.tableHeader}
+                  >
+                    Places
+                  </SortableHeader>
+                  <SortableHeader 
+                    sortKey="views" 
+                    onSort={handleSort} 
+                    getSortIcon={getSortIcon}
+                    style={dashboardStyles.tableHeader}
+                  >
+                    Views
+                  </SortableHeader>
+                  <SortableHeader 
+                    sortKey="status" 
+                    onSort={handleSort} 
+                    getSortIcon={getSortIcon}
+                    style={dashboardStyles.tableHeader}
+                  >
+                    Status
+                  </SortableHeader>
                   <th style={dashboardStyles.tableHeader}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredLists.map((list) => (
+                {sortedData.map((list) => (
                   <tr key={list.id}>
                     <td style={dashboardStyles.tableCell}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -459,6 +510,7 @@ export default function ListManagementPage() {
                         </div>
                       </div>
                     </td>
+                    <td style={dashboardStyles.tableCell}>{list.created}</td>
                     <td style={dashboardStyles.tableCell}>@{list.publisher}</td>
                     <td style={dashboardStyles.tableCell}>{list.places}</td>
                     <td style={dashboardStyles.tableCell}>{list.views.toLocaleString()}</td>
@@ -483,10 +535,10 @@ export default function ListManagementPage() {
                           VIEW
                         </button>
                         <button
-                          onClick={() => handleListAction('hide', list.id)}
+                          onClick={() => handleListAction(list.status === 'HIDDEN' ? 'show' : 'hide', list.id)}
                           style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px', color: '#f59e0b', borderColor: '#f59e0b' }}
                         >
-                          {list.status === 'HIDDEN' ? 'SHOW' : 'HIDE'}
+                          {list.status === 'HIDDEN' ? 'PUBLISH' : 'HIDE'}
                         </button>
                         <button
                           onClick={() => handleListAction('delete', list.id)}
