@@ -75,8 +75,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="w-full max-w-2xl p-8">
+    <div className="min-h-screen bg-black flex items-center justify-center px-8">
+      <div className="w-full max-w-3xl">
         {/* Simple title with cursor */}
         <div className="text-center mb-12">
           <h1 className="text-2xl text-white mb-2">PLACEMARKS</h1>
@@ -87,30 +87,31 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="form-input"
-              placeholder="EMAIL"
-              autoComplete="email"
-              required
-            />
-          </div>
+        <div className="max-w-2xl mx-auto">
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="form-input"
+                placeholder="EMAIL"
+                autoComplete="email"
+                required
+              />
+            </div>
 
-          <div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="form-input"
-              placeholder="PASSWORD"
-              autoComplete="current-password"
-              required
-            />
-          </div>
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="form-input"
+                placeholder="PASSWORD"
+                autoComplete="current-password"
+                required
+              />
+            </div>
 
           {error && (
             <div className="text-red text-sm text-center">
@@ -118,14 +119,15 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn"
-          >
-            {loading ? 'AUTHENTICATING...' : 'ENTER'}
-          </button>
-        </form>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn"
+            >
+              {loading ? 'AUTHENTICATING...' : 'ENTER'}
+            </button>
+          </form>
+        </div>
 
         {/* Admin Login */}
         <div className="mt-12 text-center text-xs text-gray-dark">

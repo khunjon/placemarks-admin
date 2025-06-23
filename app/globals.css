@@ -53,6 +53,10 @@ body {
   max-width: 42rem;
 }
 
+.max-w-3xl {
+  max-width: 48rem;
+}
+
 .max-w-4xl {
   max-width: 56rem;
 }
@@ -203,7 +207,7 @@ body {
   border: none;
   border-bottom: 2px solid #00ffff;
   color: #ffffff;
-  padding: 0.75rem 0;
+  padding: 1rem 1.5rem;
   font-size: 1.125rem;
   font-family: 'Courier New', monospace;
   outline: none;
