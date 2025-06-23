@@ -27,6 +27,15 @@ export default function ListManagementPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedList, setSelectedList] = useState<DisplayList | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editListData, setEditListData] = useState({
+    id: '',
+    name: '',
+    publisher_name: '',
+    description: '',
+    location_scope: '',
+    external_link: ''
+  })
   const [lists, setLists] = useState<DisplayList[]>([])
   const [stats, setStats] = useState<CuratedListStats | null>(null)
   const [loadingData, setLoadingData] = useState(true)
@@ -262,6 +271,51 @@ export default function ListManagementPage() {
       }
     } catch (error) {
       console.error('Error creating list:', error)
+    }
+  }
+
+  const handleEditList = (list: DisplayList) => {
+    setEditListData({
+      id: list.id,
+      name: list.name,
+      publisher_name: list.publisher,
+      description: '', // We'll need to fetch this from the API if not available
+      location_scope: list.location_scope || '',
+      external_link: list.link_url || ''
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateList = async () => {
+    try {
+      const response = await fetch(`/api/admin/lists/${editListData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editListData.name,
+          publisher_name: editListData.publisher_name,
+          description: editListData.description,
+          location_scope: editListData.location_scope,
+          external_link: editListData.external_link
+        })
+      })
+
+      if (response.ok) {
+        setShowEditModal(false)
+        setEditListData({ 
+          id: '',
+          name: '', 
+          publisher_name: '', 
+          description: '', 
+          location_scope: '', 
+          external_link: '' 
+        })
+        loadData() // Refresh the list
+      } else {
+        console.error('Failed to update list')
+      }
+    } catch (error) {
+      console.error('Error updating list:', error)
     }
   }
 
@@ -610,10 +664,10 @@ export default function ListManagementPage() {
                     <td style={dashboardStyles.tableCell}>
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button
-                          onClick={() => setSelectedList(list)}
+                          onClick={() => handleEditList(list)}
                           style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
                         >
-                          VIEW
+                          EDIT
                         </button>
                         <button
                           onClick={() => handleListAction(list.status === 'HIDDEN' ? 'show' : 'hide', list.id)}
@@ -732,6 +786,93 @@ export default function ListManagementPage() {
                 style={dashboardStyles.button}
               >
                 CREATE LIST
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit List Modal */}
+      {showEditModal && (
+        <div style={dashboardStyles.modal}>
+          <div style={dashboardStyles.modalContent}>
+            <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#fff', marginBottom: '24px' }}>
+              Edit Curated List
+            </h2>
+            <div style={{ display: 'grid', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  List Name
+                </label>
+                <input
+                  type="text"
+                  value={editListData.name}
+                  onChange={(e) => setEditListData({...editListData, name: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter list name..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  Publisher Name
+                </label>
+                <input
+                  type="text"
+                  value={editListData.publisher_name}
+                  onChange={(e) => setEditListData({...editListData, publisher_name: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter publisher name..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  Description
+                </label>
+                <input
+                  type="text"
+                  value={editListData.description}
+                  onChange={(e) => setEditListData({...editListData, description: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter list description..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  Location Scope
+                </label>
+                <input
+                  type="text"
+                  value={editListData.location_scope}
+                  onChange={(e) => setEditListData({...editListData, location_scope: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="e.g., Bangkok, Sukhumvit..."
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  External Link
+                </label>
+                <input
+                  type="text"
+                  value={editListData.external_link}
+                  onChange={(e) => setEditListData({...editListData, external_link: e.target.value})}
+                  style={dashboardStyles.input}
+                  placeholder="Enter external link..."
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '32px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{ ...dashboardStyles.buttonSecondary, backgroundColor: 'transparent' }}
+              >
+                CANCEL
+              </button>
+              <button
+                onClick={handleUpdateList}
+                style={dashboardStyles.button}
+              >
+                UPDATE LIST
               </button>
             </div>
           </div>
