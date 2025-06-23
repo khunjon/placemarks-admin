@@ -46,6 +46,21 @@ export default function ListManagementPage() {
     location_scope: '',
     external_link: ''
   })
+  const [selectedPlaces, setSelectedPlaces] = useState<Array<{
+    id: string
+    name: string
+    address: string
+    lat?: number
+    lng?: number
+  }>>([])
+  const [editSelectedPlaces, setEditSelectedPlaces] = useState<Array<{
+    id: string
+    name: string
+    address: string
+    lat?: number
+    lng?: number
+  }>>([])
+  const [placeSearchTerm, setPlaceSearchTerm] = useState('')
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -253,7 +268,10 @@ export default function ListManagementPage() {
       const response = await fetch('/api/admin/lists', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newListData)
+        body: JSON.stringify({
+          ...newListData,
+          places: selectedPlaces
+        })
       })
 
       if (response.ok) {
@@ -265,6 +283,8 @@ export default function ListManagementPage() {
           location_scope: '', 
           external_link: '' 
         })
+        setSelectedPlaces([])
+        setPlaceSearchTerm('')
         loadData() // Refresh the list
       } else {
         console.error('Failed to create list')
@@ -272,6 +292,45 @@ export default function ListManagementPage() {
     } catch (error) {
       console.error('Error creating list:', error)
     }
+  }
+
+  const handleAddPlace = (place: { id: string, name: string, address: string }) => {
+    if (showEditModal) {
+      // Check if place is already added to edit list
+      if (!editSelectedPlaces.find(p => p.id === place.id)) {
+        setEditSelectedPlaces([...editSelectedPlaces, place])
+      }
+    } else {
+      // Check if place is already added to create list
+      if (!selectedPlaces.find(p => p.id === place.id)) {
+        setSelectedPlaces([...selectedPlaces, place])
+      }
+    }
+    setPlaceSearchTerm('')
+  }
+
+  const handleRemovePlace = (placeId: string) => {
+    if (showEditModal) {
+      setEditSelectedPlaces(editSelectedPlaces.filter(p => p.id !== placeId))
+    } else {
+      setSelectedPlaces(selectedPlaces.filter(p => p.id !== placeId))
+    }
+  }
+
+  const mockGooglePlacesSearch = (searchTerm: string) => {
+    // Mock data for Google Places API - replace with actual API call later
+    const mockPlaces = [
+      { id: '1', name: 'Gaggan', address: '68/1 Soi Langsuan, Ploenchit Rd, Bangkok 10330' },
+      { id: '2', name: 'Le Du', address: '399/3 Silom Rd, Bangkok 10500' },
+      { id: '3', name: 'Sorn', address: '56 Sukhumvit 26, Bangkok 10110' },
+      { id: '4', name: 'Blue Elephant', address: '233 S Sathorn Rd, Bangkok 10120' },
+      { id: '5', name: 'Issaya Siamese Club', address: '4 Soi Si Akson, Bangkok 10120' }
+    ]
+    
+    return mockPlaces.filter(place => 
+      place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      place.address.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   }
 
   const handleEditList = (list: DisplayList) => {
@@ -283,6 +342,11 @@ export default function ListManagementPage() {
       location_scope: list.location_scope || '',
       external_link: list.link_url || ''
     })
+    // Mock places data for the list - replace with actual API call later
+    setEditSelectedPlaces([
+      { id: 'edit-1', name: 'Example Restaurant', address: '123 Example St, Bangkok' }
+    ])
+    setPlaceSearchTerm('')
     setShowEditModal(true)
   }
 
@@ -296,7 +360,8 @@ export default function ListManagementPage() {
           publisher_name: editListData.publisher_name,
           description: editListData.description,
           location_scope: editListData.location_scope,
-          external_link: editListData.external_link
+          external_link: editListData.external_link,
+          places: editSelectedPlaces
         })
       })
 
@@ -310,6 +375,8 @@ export default function ListManagementPage() {
           location_scope: '', 
           external_link: '' 
         })
+        setEditSelectedPlaces([])
+        setPlaceSearchTerm('')
         loadData() // Refresh the list
       } else {
         console.error('Failed to update list')
@@ -694,89 +761,209 @@ export default function ListManagementPage() {
       {/* Create List Modal */}
       {showCreateModal && (
         <div style={dashboardStyles.modal}>
-          <div style={dashboardStyles.modalContent}>
+          <div style={{ 
+            ...dashboardStyles.modalContent,
+            maxWidth: '1200px',
+            width: '95%'
+          }}>
             <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#fff', marginBottom: '24px' }}>
               Create New Curated List
             </h2>
-            <div style={{ display: 'grid', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  List Name
-                </label>
-                <input
-                  type="text"
-                  value={newListData.name}
-                  onChange={(e) => setNewListData({...newListData, name: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter list name..."
-                />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+              
+              {/* Left Column - Form */}
+              <div style={{ display: 'grid', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    List Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newListData.name}
+                    onChange={(e) => setNewListData({...newListData, name: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter list name..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Publisher Name
+                  </label>
+                  <input
+                    type="text"
+                    value={newListData.publisher_name}
+                    onChange={(e) => setNewListData({...newListData, publisher_name: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter publisher name..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    value={newListData.description}
+                    onChange={(e) => setNewListData({...newListData, description: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter list description..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Location Scope
+                  </label>
+                  <input
+                    type="text"
+                    value={newListData.location_scope}
+                    onChange={(e) => setNewListData({...newListData, location_scope: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="e.g., Bangkok, Sukhumvit..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    External Link
+                  </label>
+                  <input
+                    type="text"
+                    value={newListData.external_link}
+                    onChange={(e) => setNewListData({...newListData, external_link: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter external link..."
+                  />
+                </div>
+                
+                {/* Google Places Search */}
+                <div style={{ marginTop: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Search Places
+                  </label>
+                  <input
+                    type="text"
+                    value={placeSearchTerm}
+                    onChange={(e) => setPlaceSearchTerm(e.target.value)}
+                    style={dashboardStyles.input}
+                    placeholder="Search for restaurants to add..."
+                  />
+                  
+                  {/* Search Results */}
+                  {placeSearchTerm && (
+                    <div style={{
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      border: '1px solid #444',
+                      borderRadius: '4px',
+                      marginTop: '8px',
+                      backgroundColor: '#2a2a2a'
+                    }}>
+                      {mockGooglePlacesSearch(placeSearchTerm).map((place) => (
+                        <div
+                          key={place.id}
+                          onClick={() => handleAddPlace(place)}
+                          style={{
+                            padding: '12px',
+                            borderBottom: '1px solid #444',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#3a3a3a'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent'
+                          }}
+                        >
+                          <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                            {place.name}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999' }}>
+                            {place.address}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Right Column - Selected Places */}
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Publisher Name
-                </label>
-                <input
-                  type="text"
-                  value={newListData.publisher_name}
-                  onChange={(e) => setNewListData({...newListData, publisher_name: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter publisher name..."
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={newListData.description}
-                  onChange={(e) => setNewListData({...newListData, description: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter list description..."
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Location Scope
-                </label>
-                <input
-                  type="text"
-                  value={newListData.location_scope}
-                  onChange={(e) => setNewListData({...newListData, location_scope: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="e.g., Bangkok, Sukhumvit..."
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  External Link
-                </label>
-                <input
-                  type="text"
-                  value={newListData.external_link}
-                  onChange={(e) => setNewListData({...newListData, external_link: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter external link..."
-                />
-              </div>
-              <div style={{ marginTop: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Add Places (Search)
-                </label>
-                <input
-                  type="text"
-                  style={dashboardStyles.input}
-                  placeholder="Search for places to add... (Google Places integration coming soon)"
-                  disabled
-                />
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  Google Places autocomplete will be integrated here
+                <div style={{ marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>
+                    Selected Places ({selectedPlaces.length})
+                  </h3>
+                  <div style={{ fontSize: '14px', color: '#999' }}>
+                    Places that will be added to this curated list
+                  </div>
+                </div>
+                
+                <div style={{
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  display: 'grid',
+                  gap: '12px'
+                }}>
+                  {selectedPlaces.map((place) => (
+                    <div key={place.id} style={{
+                      backgroundColor: '#2a2a2a',
+                      border: '1px solid #444',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      position: 'relative'
+                    }}>
+                      <button
+                        onClick={() => handleRemovePlace(place.id)}
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: '#ef4444',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ×
+                      </button>
+                      <div style={{ fontWeight: '600', color: '#fff', marginBottom: '8px', paddingRight: '32px' }}>
+                        {place.name}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#999', lineHeight: '1.4' }}>
+                        {place.address}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {selectedPlaces.length === 0 && (
+                    <div style={{
+                      textAlign: 'center',
+                      color: '#666',
+                      fontSize: '14px',
+                      padding: '32px',
+                      fontStyle: 'italic'
+                    }}>
+                      No places selected yet. Use the search to add places.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+            
             <div style={{ display: 'flex', gap: '16px', marginTop: '32px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => {
+                  setShowCreateModal(false)
+                  setSelectedPlaces([])
+                  setPlaceSearchTerm('')
+                }}
                 style={{ ...dashboardStyles.buttonSecondary, backgroundColor: 'transparent' }}
               >
                 CANCEL
@@ -795,75 +982,209 @@ export default function ListManagementPage() {
       {/* Edit List Modal */}
       {showEditModal && (
         <div style={dashboardStyles.modal}>
-          <div style={dashboardStyles.modalContent}>
+          <div style={{ 
+            ...dashboardStyles.modalContent,
+            maxWidth: '1200px',
+            width: '95%'
+          }}>
             <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#fff', marginBottom: '24px' }}>
               Edit Curated List
             </h2>
-            <div style={{ display: 'grid', gap: '16px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  List Name
-                </label>
-                <input
-                  type="text"
-                  value={editListData.name}
-                  onChange={(e) => setEditListData({...editListData, name: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter list name..."
-                />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+              
+              {/* Left Column - Form */}
+              <div style={{ display: 'grid', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    List Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editListData.name}
+                    onChange={(e) => setEditListData({...editListData, name: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter list name..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Publisher Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editListData.publisher_name}
+                    onChange={(e) => setEditListData({...editListData, publisher_name: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter publisher name..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Description
+                  </label>
+                  <input
+                    type="text"
+                    value={editListData.description}
+                    onChange={(e) => setEditListData({...editListData, description: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter list description..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Location Scope
+                  </label>
+                  <input
+                    type="text"
+                    value={editListData.location_scope}
+                    onChange={(e) => setEditListData({...editListData, location_scope: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="e.g., Bangkok, Sukhumvit..."
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    External Link
+                  </label>
+                  <input
+                    type="text"
+                    value={editListData.external_link}
+                    onChange={(e) => setEditListData({...editListData, external_link: e.target.value})}
+                    style={dashboardStyles.input}
+                    placeholder="Enter external link..."
+                  />
+                </div>
+                
+                {/* Google Places Search */}
+                <div style={{ marginTop: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Add More Places
+                  </label>
+                  <input
+                    type="text"
+                    value={placeSearchTerm}
+                    onChange={(e) => setPlaceSearchTerm(e.target.value)}
+                    style={dashboardStyles.input}
+                    placeholder="Search for restaurants to add..."
+                  />
+                  
+                  {/* Search Results */}
+                  {placeSearchTerm && (
+                    <div style={{
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      border: '1px solid #444',
+                      borderRadius: '4px',
+                      marginTop: '8px',
+                      backgroundColor: '#2a2a2a'
+                    }}>
+                      {mockGooglePlacesSearch(placeSearchTerm).map((place) => (
+                        <div
+                          key={place.id}
+                          onClick={() => handleAddPlace(place)}
+                          style={{
+                            padding: '12px',
+                            borderBottom: '1px solid #444',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = '#3a3a3a'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent'
+                          }}
+                        >
+                          <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                            {place.name}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999' }}>
+                            {place.address}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Right Column - Selected Places */}
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Publisher Name
-                </label>
-                <input
-                  type="text"
-                  value={editListData.publisher_name}
-                  onChange={(e) => setEditListData({...editListData, publisher_name: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter publisher name..."
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={editListData.description}
-                  onChange={(e) => setEditListData({...editListData, description: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter list description..."
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Location Scope
-                </label>
-                <input
-                  type="text"
-                  value={editListData.location_scope}
-                  onChange={(e) => setEditListData({...editListData, location_scope: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="e.g., Bangkok, Sukhumvit..."
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  External Link
-                </label>
-                <input
-                  type="text"
-                  value={editListData.external_link}
-                  onChange={(e) => setEditListData({...editListData, external_link: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter external link..."
-                />
+                <div style={{ marginBottom: '16px' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#fff', marginBottom: '8px' }}>
+                    Places in List ({editSelectedPlaces.length})
+                  </h3>
+                  <div style={{ fontSize: '14px', color: '#999' }}>
+                    Current places in this curated list
+                  </div>
+                </div>
+                
+                <div style={{
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  display: 'grid',
+                  gap: '12px'
+                }}>
+                  {editSelectedPlaces.map((place) => (
+                    <div key={place.id} style={{
+                      backgroundColor: '#2a2a2a',
+                      border: '1px solid #444',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      position: 'relative'
+                    }}>
+                      <button
+                        onClick={() => handleRemovePlace(place.id)}
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: '#ef4444',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '24px',
+                          height: '24px',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ×
+                      </button>
+                      <div style={{ fontWeight: '600', color: '#fff', marginBottom: '8px', paddingRight: '32px' }}>
+                        {place.name}
+                      </div>
+                      <div style={{ fontSize: '14px', color: '#999', lineHeight: '1.4' }}>
+                        {place.address}
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {editSelectedPlaces.length === 0 && (
+                    <div style={{
+                      textAlign: 'center',
+                      color: '#666',
+                      fontSize: '14px',
+                      padding: '32px',
+                      fontStyle: 'italic'
+                    }}>
+                      No places in this list yet. Use the search to add places.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+            
             <div style={{ display: 'flex', gap: '16px', marginTop: '32px', justifyContent: 'flex-end' }}>
               <button
-                onClick={() => setShowEditModal(false)}
+                onClick={() => {
+                  setShowEditModal(false)
+                  setEditSelectedPlaces([])
+                  setPlaceSearchTerm('')
+                }}
                 style={{ ...dashboardStyles.buttonSecondary, backgroundColor: 'transparent' }}
               >
                 CANCEL
