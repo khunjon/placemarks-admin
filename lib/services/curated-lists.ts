@@ -66,6 +66,21 @@ class CuratedListsAdminService {
     }
   }
 
+  // Get all lists (both curated and user-created)
+  async getAllLists() {
+    try {
+      const client = this.checkClient()
+      const { data, error } = await client
+        .from('lists')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
   // Get detailed curated list with places
   async getCuratedListWithPlaces(listId: string) {
     try {
@@ -250,6 +265,7 @@ export type CuratedListStats = {
   location_scopes_count: number
   avg_places_per_list: number
   most_recent_update: string
+  total_all_lists?: number
   private_percentage?: number
   public_lists?: number
   private_lists?: number

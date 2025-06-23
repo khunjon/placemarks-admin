@@ -360,10 +360,19 @@ export default function ListManagementPage() {
            <div style={dashboardStyles.metricsCard}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                <h3 style={dashboardStyles.metricLabel}>Total Lists</h3>
-               <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
+             </div>
+             <div style={dashboardStyles.metricValue}>{stats?.total_all_lists || 0}</div>
+             <div style={{ fontSize: '14px', color: '#10b981' }}>
+               All lists <span style={{ color: '#666', marginLeft: '8px' }}>curated + user-created</span>
+             </div>
+           </div>
+
+           <div style={dashboardStyles.metricsCard}>
+             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+               <h3 style={dashboardStyles.metricLabel}>Curated Lists</h3>
              </div>
              <div style={dashboardStyles.metricValue}>{stats?.total_curated_lists || 0}</div>
-             <div style={{ fontSize: '14px', color: '#10b981' }}>
+             <div style={{ fontSize: '14px', color: '#3b82f6' }}>
                {stats?.publishers_count || 0} <span style={{ color: '#666', marginLeft: '8px' }}>publishers</span>
              </div>
            </div>
@@ -371,10 +380,9 @@ export default function ListManagementPage() {
            <div style={dashboardStyles.metricsCard}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                <h3 style={dashboardStyles.metricLabel}>Unique Places</h3>
-               <div style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '50%' }}></div>
              </div>
              <div style={dashboardStyles.metricValue}>{stats?.total_places_in_curated_lists || 0}</div>
-             <div style={{ fontSize: '14px', color: '#3b82f6' }}>
+             <div style={{ fontSize: '14px', color: '#f59e0b' }}>
                {stats?.avg_places_per_list?.toFixed(1) || 0} <span style={{ color: '#666', marginLeft: '8px' }}>avg per list</span>
              </div>
            </div>
@@ -382,22 +390,10 @@ export default function ListManagementPage() {
            <div style={dashboardStyles.metricsCard}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                <h3 style={dashboardStyles.metricLabel}>% Private</h3>
-               <div style={{ width: '8px', height: '8px', backgroundColor: '#f59e0b', borderRadius: '50%' }}></div>
              </div>
              <div style={dashboardStyles.metricValue}>{stats?.private_percentage || 0}%</div>
-             <div style={{ fontSize: '14px', color: '#f59e0b' }}>
-               {stats?.private_lists || 0} <span style={{ color: '#666', marginLeft: '8px' }}>private lists</span>
-             </div>
-           </div>
-
-           <div style={dashboardStyles.metricsCard}>
-             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-               <h3 style={dashboardStyles.metricLabel}>Location Scopes</h3>
-               <div style={{ width: '8px', height: '8px', backgroundColor: '#8b5cf6', borderRadius: '50%' }}></div>
-             </div>
-             <div style={dashboardStyles.metricValue}>{stats?.location_scopes_count || 0}</div>
              <div style={{ fontSize: '14px', color: '#8b5cf6' }}>
-               {stats?.public_lists || 0} <span style={{ color: '#666', marginLeft: '8px' }}>public lists</span>
+               {stats?.private_lists || 0} <span style={{ color: '#666', marginLeft: '8px' }}>private lists</span>
              </div>
            </div>
          </div>
