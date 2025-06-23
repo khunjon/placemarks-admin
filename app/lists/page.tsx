@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { CuratedList, CuratedListStats } from '@/lib/services/curated-lists'
 import { useSorting } from '@/lib/hooks/useSorting'
-import { SortableHeader } from '@/components/SortableHeader'
 
 interface DisplayList {
   id: string
@@ -434,54 +433,138 @@ export default function ListManagementPage() {
             <table style={dashboardStyles.metricsTable}>
               <thead>
                 <tr>
-                  <SortableHeader 
-                    sortKey="name" 
-                    onSort={handleSort} 
-                    getSortIcon={getSortIcon}
-                    style={dashboardStyles.tableHeader}
+                  <th 
+                    style={{
+                      ...dashboardStyles.tableHeader,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onClick={() => handleSort('name')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2a'
+                    }}
                   >
-                    List Name
-                  </SortableHeader>
-                  <SortableHeader 
-                    sortKey="created" 
-                    onSort={handleSort} 
-                    getSortIcon={getSortIcon}
-                    style={dashboardStyles.tableHeader}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span>List Name</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
+                        {getSortIcon('name')}
+                      </span>
+                    </div>
+                  </th>
+                  <th 
+                    style={{
+                      ...dashboardStyles.tableHeader,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onClick={() => handleSort('created')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2a'
+                    }}
                   >
-                    Created
-                  </SortableHeader>
-                  <SortableHeader 
-                    sortKey="publisher" 
-                    onSort={handleSort} 
-                    getSortIcon={getSortIcon}
-                    style={dashboardStyles.tableHeader}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span>Created</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
+                        {getSortIcon('created')}
+                      </span>
+                    </div>
+                  </th>
+                  <th 
+                    style={{
+                      ...dashboardStyles.tableHeader,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onClick={() => handleSort('publisher')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2a'
+                    }}
                   >
-                    Publisher
-                  </SortableHeader>
-                  <SortableHeader 
-                    sortKey="places" 
-                    onSort={handleSort} 
-                    getSortIcon={getSortIcon}
-                    style={dashboardStyles.tableHeader}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span>Publisher</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
+                        {getSortIcon('publisher')}
+                      </span>
+                    </div>
+                  </th>
+                  <th 
+                    style={{
+                      ...dashboardStyles.tableHeader,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onClick={() => handleSort('places')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2a'
+                    }}
                   >
-                    Places
-                  </SortableHeader>
-                  <SortableHeader 
-                    sortKey="views" 
-                    onSort={handleSort} 
-                    getSortIcon={getSortIcon}
-                    style={dashboardStyles.tableHeader}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span>Places</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
+                        {getSortIcon('places')}
+                      </span>
+                    </div>
+                  </th>
+                  <th 
+                    style={{
+                      ...dashboardStyles.tableHeader,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onClick={() => handleSort('views')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2a'
+                    }}
                   >
-                    Views
-                  </SortableHeader>
-                  <SortableHeader 
-                    sortKey="status" 
-                    onSort={handleSort} 
-                    getSortIcon={getSortIcon}
-                    style={dashboardStyles.tableHeader}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span>Views</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
+                        {getSortIcon('views')}
+                      </span>
+                    </div>
+                  </th>
+                  <th 
+                    style={{
+                      ...dashboardStyles.tableHeader,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.2s ease'
+                    }}
+                    onClick={() => handleSort('status')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2a'
+                    }}
                   >
-                    Status
-                  </SortableHeader>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span>Status</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
+                        {getSortIcon('status')}
+                      </span>
+                    </div>
+                  </th>
                   <th style={dashboardStyles.tableHeader}>Actions</th>
                 </tr>
               </thead>
