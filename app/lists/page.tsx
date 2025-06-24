@@ -708,7 +708,7 @@ export default function ListManagementPage() {
                       userSelect: 'none',
                       transition: 'background-color 0.2s ease'
                     }}
-                    onClick={() => handleSort('places')}
+                    onClick={() => handleSort('location_scope')}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
                     }}
@@ -717,31 +717,9 @@ export default function ListManagementPage() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <span>Places</span>
+                      <span>Location Scope</span>
                       <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
-                        {getSortIcon('places')}
-                      </span>
-                    </div>
-                  </th>
-                  <th 
-                    style={{
-                      ...dashboardStyles.tableHeader,
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onClick={() => handleSort('views')}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2a2a2a'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <span>Views</span>
-                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
-                        {getSortIcon('views')}
+                        {getSortIcon('location_scope')}
                       </span>
                     </div>
                   </th>
@@ -781,8 +759,7 @@ export default function ListManagementPage() {
                     </td>
                     <td style={dashboardStyles.tableCell}>{list.created}</td>
                     <td style={dashboardStyles.tableCell}>@{list.publisher}</td>
-                    <td style={dashboardStyles.tableCell}>{list.places}</td>
-                    <td style={dashboardStyles.tableCell}>{list.views.toLocaleString()}</td>
+                    <td style={dashboardStyles.tableCell}>{list.location_scope || 'Global'}</td>
                     <td style={dashboardStyles.tableCell}>
                       <span style={{ 
                         color: getStatusColor(list.status),
