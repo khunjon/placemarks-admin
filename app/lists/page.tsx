@@ -268,15 +268,27 @@ export default function ListManagementPage() {
   }
 
   const handleAddPlace = (place: { id: string, name: string, address: string }) => {
+    console.log(`🔍 [Frontend] handleAddPlace called with:`, place)
+    console.log(`🔍 [Frontend] showEditModal:`, showEditModal)
+    console.log(`🔍 [Frontend] Current editSelectedPlaces:`, editSelectedPlaces)
+    
     if (showEditModal) {
       // Check if place is already added to edit list
       if (!editSelectedPlaces.find(p => p.id === place.id)) {
-        setEditSelectedPlaces([...editSelectedPlaces, place])
+        const newEditSelectedPlaces = [...editSelectedPlaces, place]
+        console.log(`✅ [Frontend] Adding place to edit list. New list:`, newEditSelectedPlaces)
+        setEditSelectedPlaces(newEditSelectedPlaces)
+      } else {
+        console.log(`ℹ️ [Frontend] Place ${place.name} already in edit list`)
       }
     } else {
       // Check if place is already added to create list
       if (!selectedPlaces.find(p => p.id === place.id)) {
-        setSelectedPlaces([...selectedPlaces, place])
+        const newSelectedPlaces = [...selectedPlaces, place]
+        console.log(`✅ [Frontend] Adding place to create list. New list:`, newSelectedPlaces)
+        setSelectedPlaces(newSelectedPlaces)
+      } else {
+        console.log(`ℹ️ [Frontend] Place ${place.name} already in create list`)
       }
     }
     setPlaceSearchTerm('')
@@ -324,9 +336,10 @@ export default function ListManagementPage() {
       // Load places
       if (placesResponse.ok) {
         const places = await placesResponse.json()
+        console.log(`🔍 [Frontend] Loaded ${places.length} places for list ${list.id}:`, places)
         setEditSelectedPlaces(places)
       } else {
-        console.error('Failed to fetch list places')
+        console.error('❌ [Frontend] Failed to fetch list places:', placesResponse.status, placesResponse.statusText)
         setEditSelectedPlaces([])
       }
     } catch (error) {
@@ -349,17 +362,25 @@ export default function ListManagementPage() {
 
   const handleUpdateList = async () => {
     try {
+      console.log(`🔍 [Frontend] Preparing to update list ${editListData.id}`)
+      console.log(`🔍 [Frontend] editSelectedPlaces state:`, editSelectedPlaces)
+      console.log(`🔍 [Frontend] editSelectedPlaces length:`, editSelectedPlaces.length)
+      
+      const requestBody = {
+        name: editListData.name,
+        publisher_name: editListData.publisher_name,
+        description: editListData.description,
+        location_scope: editListData.location_scope,
+        external_link: editListData.external_link,
+        places: editSelectedPlaces
+      }
+      
+      console.log(`🔍 [Frontend] Complete request body:`, JSON.stringify(requestBody, null, 2))
+      
       const response = await fetch(`/api/admin/lists/${editListData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: editListData.name,
-          publisher_name: editListData.publisher_name,
-          description: editListData.description,
-          location_scope: editListData.location_scope,
-          external_link: editListData.external_link,
-          places: editSelectedPlaces
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (response.ok) {
