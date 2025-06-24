@@ -84,8 +84,14 @@ export async function POST(request: NextRequest) {
     if (data && body.places && Array.isArray(body.places)) {
       try {
         console.log(`Adding ${body.places.length} places to new list ${data.id}`)
-        // For now, just log the places - TODO: implement proper place creation and linking
-        // await curatedListsAdmin.addPlacesToList(data.id, body.places)
+        const { error: placesError } = await curatedListsAdmin.updateListPlaces(data.id, body.places)
+        
+        if (placesError) {
+          console.error('Error adding places to list:', placesError)
+          // Don't fail the entire creation if places addition fails, but log the error
+        } else {
+          console.log(`Successfully added ${body.places.length} places to new list ${data.id}`)
+        }
       } catch (placesError) {
         console.error('Error adding places to list:', placesError)
         // Don't fail the entire creation if places addition fails

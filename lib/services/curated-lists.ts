@@ -249,6 +249,141 @@ class CuratedListsAdminService {
       return { data: null, error }
     }
   }
+
+  // Create place if it doesn't exist, return existing or new place ID
+  async createPlaceIfNotExists(placeData: {
+    google_place_id: string
+    name: string
+    address: string
+    lat?: number
+    lng?: number
+  }) {
+    try {
+      const client = this.checkClient()
+      
+      // First check if place already exists
+      const { data: existingPlace, error: findError } = await client
+        .from('places')
+        .select('id')
+        .eq('google_place_id', placeData.google_place_id)
+        .single()
+      
+      if (!findError && existingPlace) {
+        return { data: existingPlace, error: null }
+      }
+
+      // Create new place if it doesn't exist
+      const coordinates = placeData.lat && placeData.lng 
+        ? `POINT(${placeData.lng} ${placeData.lat})`
+        : null
+
+      const { data, error } = await client
+        .from('places')
+        .insert({
+          google_place_id: placeData.google_place_id,
+          name: placeData.name,
+          address: placeData.address,
+          coordinates: coordinates as unknown,
+          place_type: 'restaurant', // Default type
+          primary_type: 'restaurant'
+        })
+        .select('id')
+        .single()
+
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  // Update all places for a list (removes existing, adds new ones)
+  async updateListPlaces(listId: string, places: Array<{
+    id: string // This is the Google Place ID
+    name: string
+    address: string
+    lat?: number
+    lng?: number
+  }>) {
+    try {
+      const client = this.checkClient()
+
+      // Start a transaction-like operation
+      // First, remove all existing places from the list
+      const { error: removeError } = await client
+        .from('list_places')
+        .delete()
+        .eq('list_id', listId)
+
+      if (removeError) {
+        return { error: removeError }
+      }
+
+      // Process each place and add to list
+      const results = []
+      for (const place of places) {
+        // Create place if it doesn't exist
+        const { data: placeRecord, error: placeError } = await this.createPlaceIfNotExists({
+          google_place_id: place.id,
+          name: place.name,
+          address: place.address,
+          lat: place.lat,
+          lng: place.lng
+        })
+
+        if (placeError || !placeRecord) {
+          console.error(`Failed to create/find place ${place.name}:`, placeError)
+          continue
+        }
+
+        // Add place to list
+        const { data: listPlaceData, error: listPlaceError } = await client
+          .from('list_places')
+          .insert({
+            list_id: listId,
+            place_id: placeRecord.id
+          })
+          .select()
+
+        if (listPlaceError) {
+          console.error(`Failed to add place ${place.name} to list:`, listPlaceError)
+          continue
+        }
+
+        results.push(listPlaceData)
+      }
+
+      return { data: results, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
+  // Get places for a specific list
+  async getListPlaces(listId: string) {
+    try {
+      const client = this.checkClient()
+      const { data, error } = await client
+        .from('list_places')
+        .select(`
+          place_id,
+          added_at,
+          notes,
+          places (
+            id,
+            google_place_id,
+            name,
+            address,
+            coordinates
+          )
+        `)
+        .eq('list_id', listId)
+        .order('added_at', { ascending: true })
+
+      return { data, error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
 }
 
 // Export singleton instance

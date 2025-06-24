@@ -374,7 +374,7 @@ export default function ListManagementPage() {
     }
   }
 
-  const handleEditList = (list: DisplayList) => {
+  const handleEditList = async (list: DisplayList) => {
     setEditListData({
       id: list.id,
       name: list.name,
@@ -383,8 +383,22 @@ export default function ListManagementPage() {
       location_scope: list.location_scope || '',
       external_link: list.link_url || ''
     })
-    // TODO: Load actual places for this list from API
-    setEditSelectedPlaces([])
+    
+    // Load actual places for this list from API
+    try {
+      const response = await fetch(`/api/admin/lists/${list.id}/places`)
+      if (response.ok) {
+        const places = await response.json()
+        setEditSelectedPlaces(places)
+      } else {
+        console.error('Failed to fetch list places')
+        setEditSelectedPlaces([])
+      }
+    } catch (error) {
+      console.error('Error fetching list places:', error)
+      setEditSelectedPlaces([])
+    }
+    
     setPlaceSearchTerm('')
     setShowEditModal(true)
   }

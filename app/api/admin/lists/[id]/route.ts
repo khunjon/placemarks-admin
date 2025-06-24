@@ -89,9 +89,15 @@ export async function PUT(
     // If places are provided, update them too
     if (body.places && Array.isArray(body.places)) {
       try {
-        // For now, just log the places - TODO: implement proper place management
         console.log(`Updating ${body.places.length} places for list ${id}`)
-        // await curatedListsAdmin.updateListPlaces(id, body.places)
+        const { error: placesError } = await curatedListsAdmin.updateListPlaces(id, body.places)
+        
+        if (placesError) {
+          console.error('Error updating places:', placesError)
+          // Don't fail the entire update if places update fails, but log the error
+        } else {
+          console.log(`Successfully updated ${body.places.length} places for list ${id}`)
+        }
       } catch (placesError) {
         console.error('Error updating places:', placesError)
         // Don't fail the entire update if places update fails
