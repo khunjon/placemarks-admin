@@ -496,6 +496,15 @@ export default function ListManagementPage() {
   const handleListAction = async (action: string, listId: string) => {
     try {
       if (action === 'delete') {
+        // Find the list to get its name for the confirmation
+        const list = lists.find(l => l.id === listId)
+        const listName = list?.name || 'this list'
+        
+        // Show confirmation dialog
+        if (!confirm(`Are you sure you want to delete "${listName}"?\n\nThis action cannot be undone.`)) {
+          return // User cancelled, don't proceed with deletion
+        }
+        
         const response = await fetch(`/api/admin/lists/${listId}`, {
           method: 'DELETE'
         })
