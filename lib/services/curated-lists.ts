@@ -311,8 +311,7 @@ class CuratedListsAdminService {
         name: placeData.name,
         address: placeData.address,
         coordinates: coordinates as unknown,
-        place_type: 'restaurant', // Default type
-        primary_type: 'restaurant'
+        place_type: 'restaurant' // Default type - primary_type is generated automatically
       }
 
       console.log(`🔍 [CuratedListsService] Inserting place data:`, insertData)

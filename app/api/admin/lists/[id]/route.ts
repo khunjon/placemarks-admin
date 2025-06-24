@@ -8,8 +8,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  console.log(`🚀 [List API] GET endpoint hit for list details!`)
   try {
     const { id } = await params
+    console.log(`🔍 [List API] Fetching details for list: ${id}`)
     const { data, error } = await curatedListsAdmin.getCuratedListWithPlaces(id)
     
     if (error) {
