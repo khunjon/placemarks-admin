@@ -20,35 +20,45 @@ This is a Next.js 15 admin dashboard for managing curated lists in the Placemark
 
 ## Key Architecture Details
 
+### Service Layer Pattern
+- Business logic abstracted to `lib/services/` with singleton pattern exports
+- `CuratedListsAdminService` uses service role key for admin operations
+- Service classes handle error states and provide consistent data interfaces
+- Exported as singleton instances (e.g., `curatedListsAdmin`) rather than classes
+
 ### Database Integration
 - Uses Supabase client (`lib/supabase/client.ts`) for database operations
 - Database types generated in `lib/database.types.ts`
-- Comprehensive backend documentation in `docs/placemarks-backend.md`
+- Service layer manages both anon key (client) and service key (admin) operations
+- Graceful environment variable handling during build time
 
 ### Authentication Pattern
 - Requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` environment variables
-- Admin operations should use service role key (not exposed to client)
+- Admin operations use `SUPABASE_SERVICE_KEY` through service layer
 - Authentication hook available at `lib/hooks/useAuth.ts`
+- All admin pages use `export const dynamic = 'force-dynamic'` to prevent SSG issues
 
-### Component Structure
-- `components/AdminLayout.tsx` - Main layout wrapper
+### API Route Structure
+- RESTful design under `/api/admin/` for admin operations
+- Resource-based routing (e.g., `/api/admin/lists`, `/api/admin/publishers`)
+- Nested routes for relationships (e.g., `/api/admin/lists/[id]/places`)
+- Consistent error handling and HTTP status codes
+- Uses singleton service instances for database operations
+
+### Component Architecture
+- `components/AdminLayout.tsx` - Main layout wrapper with auth checks
 - `components/AdminHeader.tsx` - Navigation header
-- `components/ui/` - Reusable UI components (button, card, input, label)
-- Page components in `app/` directory (analytics, audit, database, lists, places, users)
+- `components/ui/` - Reusable UI components built on Radix UI primitives
+- `AutocompleteInput` component for form enhancements with suggestion loading
+- Centralized styling in `lib/styles/dashboard-styles.ts`
 
-### Data Management
-- Manages curated lists with publisher branding and location scoping
-- Place management with Google Places integration
+### Data Management Patterns
+- Curated lists with publisher branding and location scoping
+- Google Places API integration for place management
+- Autocomplete functionality for publishers and location scopes
 - Priority-based list ordering system
 - Geospatial queries using PostGIS
-
-### Key Features
-- Curated lists CRUD operations
-- Place assignment to lists
-- Publisher and branding support
-- Location-scoped lists
-- Admin statistics and analytics
-- Batch operations for efficiency
+- Real-time data loading with debounced search
 
 ## Environment Variables Required
 
@@ -63,10 +73,29 @@ SUPABASE_SERVICE_KEY=your_supabase_service_role_key  # For admin operations
 - The app gracefully handles missing environment variables with error messages
 - All auth-protected pages use `export const dynamic = 'force-dynamic'` to prevent SSG issues
 
-## Development Notes
+## Development Patterns
 
-- Uses dark mode by default (`className="dark"` in layout)
-- Follows Next.js App Router patterns
-- Styled with Tailwind CSS using design system approach
-- All admin operations should verify authentication before execution
-- Database schema supports multi-city expansion beyond Bangkok
+### State Management
+- React hooks for local state with consistent patterns
+- Custom hooks like `useAuth` and `useSorting` for shared logic
+- Callback patterns with `useCallback` for performance optimization
+- Loading states and error handling across all data operations
+
+### Form Handling
+- AutocompleteInput component for enhanced UX with existing data suggestions
+- Real-time validation and debounced API calls
+- Consistent form styling through `dashboardStyles.input`
+- Modal patterns for create/edit operations
+
+### UI/UX Conventions
+- Dark mode by default (`className="dark"` in layout)
+- Cyan accent color (`#00ffff`) for interactive elements
+- Consistent hover effects and transitions
+- Table-based data display with sortable columns
+- Icon-based status indicators with color coding
+
+### Code Organization
+- TypeScript strict mode with generated database types
+- Consistent import patterns and file organization
+- Error boundaries and graceful degradation
+- Performance optimizations with React 19 features
