@@ -44,6 +44,9 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
+    console.log(`🔍 [List Update API] Received PUT request for list update`)
+    console.log(`🔍 [List Update API] Request body keys:`, Object.keys(body))
+    console.log(`🔍 [List Update API] Full request body:`, JSON.stringify(body, null, 2))
     
     const updates = {
       name: body.name,

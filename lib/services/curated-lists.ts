@@ -281,6 +281,9 @@ class CuratedListsAdminService {
     try {
       const client = this.checkClient()
       
+      console.log(`🔍 [CuratedListsService] createPlaceIfNotExists for: ${placeData.name} (${placeData.google_place_id})`)
+      console.log(`🔍 [CuratedListsService] Place data:`, placeData)
+      
       // First check if place already exists
       const { data: existingPlace, error: findError } = await client
         .from('places')
@@ -289,29 +292,46 @@ class CuratedListsAdminService {
         .single()
       
       if (!findError && existingPlace) {
+        console.log(`✅ [CuratedListsService] Found existing place with id: ${existingPlace.id}`)
         return { data: existingPlace, error: null }
       }
+
+      console.log(`🔍 [CuratedListsService] Place not found, creating new place...`)
+      console.log(`🔍 [CuratedListsService] Find error was:`, findError)
 
       // Create new place if it doesn't exist
       const coordinates = placeData.lat && placeData.lng 
         ? `POINT(${placeData.lng} ${placeData.lat})`
         : null
 
+      console.log(`🔍 [CuratedListsService] Coordinates for new place:`, coordinates)
+
+      const insertData = {
+        google_place_id: placeData.google_place_id,
+        name: placeData.name,
+        address: placeData.address,
+        coordinates: coordinates as unknown,
+        place_type: 'restaurant', // Default type
+        primary_type: 'restaurant'
+      }
+
+      console.log(`🔍 [CuratedListsService] Inserting place data:`, insertData)
+
       const { data, error } = await client
         .from('places')
-        .insert({
-          google_place_id: placeData.google_place_id,
-          name: placeData.name,
-          address: placeData.address,
-          coordinates: coordinates as unknown,
-          place_type: 'restaurant', // Default type
-          primary_type: 'restaurant'
-        })
+        .insert(insertData)
         .select('id')
         .single()
 
-      return { data, error }
+      if (error) {
+        console.error(`❌ [CuratedListsService] Error creating place:`, error)
+        return { data: null, error }
+      }
+
+      console.log(`✅ [CuratedListsService] Successfully created new place with id: ${data?.id}`)
+      return { data, error: null }
     } catch (error) {
+      console.error(`❌ [CuratedListsService] Unexpected error in createPlaceIfNotExists:`, error)
       return { data: null, error }
     }
   }
