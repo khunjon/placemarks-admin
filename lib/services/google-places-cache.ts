@@ -53,12 +53,14 @@ export class GooglePlacesCacheService {
     try {
       console.log(`🔍 [GooglePlacesCache] Searching cache for: "${query}"`)
       
-      const searchPattern = `%${query}%`
+      // Try multiple search patterns for better matching
+      const searchTerms = this.getSearchPatterns(query)
+      console.log(`🔍 [GooglePlacesCache] Using search patterns:`, searchTerms)
       
       const { data, error } = await this.supabase!
         .from('google_places_cache')
         .select('*')
-        .or(`name.ilike."${searchPattern}",formatted_address.ilike."${searchPattern}"`)
+        .or(searchTerms.join(','))
         .gt('expires_at', new Date().toISOString())
         .order('cached_at', { ascending: false })
         .limit(20)
@@ -74,6 +76,28 @@ export class GooglePlacesCacheService {
       console.error('❌ [GooglePlacesCache] Unexpected cache search error:', error)
       return []
     }
+  }
+
+  /**
+   * Generate multiple search patterns for better matching
+   */
+  private getSearchPatterns(query: string): string[] {
+    const patterns = []
+    const trimmedQuery = query.trim()
+    
+    // Pattern 1: Exact query with wildcards
+    patterns.push(`name.ilike."%${trimmedQuery}%"`)
+    patterns.push(`formatted_address.ilike."%${trimmedQuery}%"`)
+    
+    // Pattern 2: Individual words for multi-word queries
+    const words = trimmedQuery.split(/\s+/).filter(word => word.length > 2)
+    if (words.length > 1) {
+      words.forEach(word => {
+        patterns.push(`name.ilike."%${word}%"`)
+      })
+    }
+    
+    return patterns
   }
 
   /**

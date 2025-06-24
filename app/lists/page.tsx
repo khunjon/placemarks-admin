@@ -135,13 +135,16 @@ export default function ListManagementPage() {
 
     setIsSearching(true)
     
-    // Combine search term with location scope for better geographic filtering
-    const combinedQuery = locationScope && locationScope.trim() 
-      ? `${searchTerm.trim()} ${locationScope.trim()}`
-      : searchTerm.trim()
-    
     try {
-      const results = await placesService.searchPlaces(combinedQuery)
+      // First try the original search term without location scope
+      let results = await placesService.searchPlaces(searchTerm.trim())
+      
+      // If no results and we have a location scope, try with location scope appended
+      if (results.length === 0 && locationScope && locationScope.trim()) {
+        const combinedQuery = `${searchTerm.trim()} ${locationScope.trim()}`
+        console.log(`🔄 [Places Search] No results for "${searchTerm.trim()}", trying with location scope: "${combinedQuery}"`)
+        results = await placesService.searchPlaces(combinedQuery)
+      }
       
       // Format results for the UI
       const formattedResults = results.map(place => ({
@@ -161,7 +164,7 @@ export default function ListManagementPage() {
       setSearchResults(filteredResults)
     } catch (error) {
       console.error('❌ [Places Search] Error searching for places:', error)
-      console.error('❌ [Places Search] Query was:', combinedQuery)
+      console.error('❌ [Places Search] Search term was:', searchTerm.trim())
       console.error('❌ [Places Search] Location scope:', locationScope)
       setSearchResults([])
     } finally {

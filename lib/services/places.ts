@@ -34,7 +34,7 @@ export class PlacesService {
 
     console.log(`🔍 [PlacesService] Starting search for: "${query}"`)
 
-    // Step 1: Check main places table for recently added places
+    // Step 1: Check main places table for recently added places (exact query first)
     const databaseResults = await this.searchPlacesInDatabase(query)
     
     if (databaseResults.length > 0) {
@@ -42,7 +42,7 @@ export class PlacesService {
       return databaseResults
     }
 
-    // Step 2: Check cache for Google Places results
+    // Step 2: Check cache for Google Places results (exact query first)
     const cachedResults = await this.cacheService.searchPlacesInCache(query, location, radius)
     
     if (cachedResults.length > 0) {
@@ -74,12 +74,14 @@ export class PlacesService {
     try {
       console.log(`🗄️ [PlacesService] Searching main database for: "${query}"`)
       
-      const searchPattern = `%${query}%`
+      // Use the same flexible search patterns as cache
+      const searchTerms = this.getSearchPatterns(query)
+      console.log(`🗄️ [PlacesService] Using search patterns:`, searchTerms)
       
       const { data, error } = await this.supabase!
         .from('places')
         .select('*')
-        .or(`name.ilike."${searchPattern}",address.ilike."${searchPattern}"`)
+        .or(searchTerms.join(','))
         .order('created_at', { ascending: false })
         .limit(20)
 
@@ -94,6 +96,28 @@ export class PlacesService {
       console.error('❌ [PlacesService] Unexpected database search error:', error)
       return []
     }
+  }
+
+  /**
+   * Generate multiple search patterns for better matching (same as cache service)
+   */
+  private getSearchPatterns(query: string): string[] {
+    const patterns = []
+    const trimmedQuery = query.trim()
+    
+    // Pattern 1: Exact query with wildcards
+    patterns.push(`name.ilike."%${trimmedQuery}%"`)
+    patterns.push(`address.ilike."%${trimmedQuery}%"`)
+    
+    // Pattern 2: Individual words for multi-word queries
+    const words = trimmedQuery.split(/\s+/).filter(word => word.length > 2)
+    if (words.length > 1) {
+      words.forEach(word => {
+        patterns.push(`name.ilike."%${word}%"`)
+      })
+    }
+    
+    return patterns
   }
 
   /**
