@@ -184,7 +184,8 @@ export default function ListManagementPage() {
   // Filtering and sorting logic - moved before early returns to comply with Rules of Hooks
   const filteredLists = lists.filter(list => 
     list.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    list.publisher.toLowerCase().includes(searchTerm.toLowerCase())
+    list.publisher.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (list.location_scope && list.location_scope.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   // Initialize sorting with default sort by created date DESC (newest first)
@@ -610,7 +611,7 @@ export default function ListManagementPage() {
           <div style={{ flex: 1, maxWidth: '400px' }}>
             <input
               type="text"
-              placeholder="Search lists by name or publisher..."
+              placeholder="Search lists by name, publisher, or location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={dashboardStyles.input}
