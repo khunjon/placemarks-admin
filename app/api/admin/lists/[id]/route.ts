@@ -89,19 +89,23 @@ export async function PUT(
     // If places are provided, update them too
     if (body.places && Array.isArray(body.places)) {
       try {
-        console.log(`Updating ${body.places.length} places for list ${id}`)
+        console.log(`🔄 [List Update API] Updating ${body.places.length} places for list ${id}`)
+        console.log(`🔄 [List Update API] Places to add:`, JSON.stringify(body.places, null, 2))
+        
         const { error: placesError } = await curatedListsAdmin.updateListPlaces(id, body.places)
         
         if (placesError) {
-          console.error('Error updating places:', placesError)
+          console.error('❌ [List Update API] Error updating places:', placesError)
           // Don't fail the entire update if places update fails, but log the error
         } else {
-          console.log(`Successfully updated ${body.places.length} places for list ${id}`)
+          console.log(`✅ [List Update API] Successfully updated ${body.places.length} places for list ${id}`)
         }
       } catch (placesError) {
-        console.error('Error updating places:', placesError)
+        console.error('❌ [List Update API] Unexpected error updating places:', placesError)
         // Don't fail the entire update if places update fails
       }
+    } else {
+      console.log(`ℹ️ [List Update API] No places provided in request body for list ${id}`)
     }
 
     return NextResponse.json(data)

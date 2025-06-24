@@ -20,16 +20,42 @@ export async function GET(
       )
     }
 
+    console.log(`🔍 [List Places API] Raw data for list ${id}:`, JSON.stringify(data, null, 2))
+
     // Transform the data to match the frontend format
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const places = (data || []).map((listPlace: any) => ({
-      id: listPlace.places.google_place_id,
-      name: listPlace.places.name,
-      address: listPlace.places.address,
-      lat: listPlace.places.coordinates?.coordinates?.[1], // PostGIS Point format [lng, lat]
-      lng: listPlace.places.coordinates?.coordinates?.[0]
-    }))
+    const places = (data || []).map((listPlace: any) => {
+      console.log(`🔍 [List Places API] Processing place:`, listPlace.places)
+      console.log(`🔍 [List Places API] Coordinates object:`, listPlace.places.coordinates)
+      
+      // Handle different PostGIS coordinate formats
+      let lat, lng
+      if (listPlace.places.coordinates) {
+        const coords = listPlace.places.coordinates
+        if (coords.coordinates && Array.isArray(coords.coordinates)) {
+          // GeoJSON format: {coordinates: [lng, lat]}
+          lng = coords.coordinates[0]
+          lat = coords.coordinates[1]
+        } else if (coords.x !== undefined && coords.y !== undefined) {
+          // PostGIS Point format: {x: lng, y: lat}
+          lng = coords.x
+          lat = coords.y
+        }
+      }
 
+      const place = {
+        id: listPlace.places.google_place_id,
+        name: listPlace.places.name,
+        address: listPlace.places.address,
+        lat: lat,
+        lng: lng
+      }
+      
+      console.log(`✅ [List Places API] Formatted place:`, place)
+      return place
+    })
+
+    console.log(`✅ [List Places API] Returning ${places.length} places for list ${id}`)
     return NextResponse.json(places)
   } catch (error) {
     console.error('Unexpected error in list places GET:', error)
