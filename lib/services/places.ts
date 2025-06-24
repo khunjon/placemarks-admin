@@ -39,13 +39,12 @@ export class PlacesService {
 
     // If no cache results, call Google Places API via our API route
     try {
-      console.log(`🌐 [Google Places API] Searching for: "${query}"`)
+      console.log(`🟢 [Google Places API] Searching for: "${query}"`)
       const apiResults = await this.callGooglePlacesAPI(query, location, radius)
       
       if (apiResults.length > 0) {
         // Cache the results for future use
         await this.cacheService.cachePlaces(apiResults)
-        console.log(`✅ [Google Places API] Found ${apiResults.length} results`)
       }
 
       return this.formatAPIResults(apiResults)
@@ -71,13 +70,12 @@ export class PlacesService {
     // Call Google Places API for details via our API route
 
     try {
-      console.log(`🌐 [PlacesService] Making Google Places Details API call for: ${placeId}`)
+      console.log(`🟢 [PlacesService] Making Google Places Details API call for: ${placeId}`)
       const placeDetails = await this.callGooglePlaceDetailsAPI(placeId)
       
       if (placeDetails) {
         // Cache the detailed result
         await this.cacheService.cachePlace(placeDetails)
-        console.log(`✅ [PlacesService] Got place details from API, cached for future use`)
         return this.formatAPIResult(placeDetails)
       }
 

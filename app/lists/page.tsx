@@ -375,27 +375,55 @@ export default function ListManagementPage() {
   }
 
   const handleEditList = async (list: DisplayList) => {
-    setEditListData({
-      id: list.id,
-      name: list.name,
-      publisher_name: list.publisher,
-      description: '', // We'll need to fetch this from the API if not available
-      location_scope: list.location_scope || '',
-      external_link: list.link_url || ''
-    })
-    
-    // Load actual places for this list from API
+    // Fetch full list details including description
     try {
-      const response = await fetch(`/api/admin/lists/${list.id}/places`)
-      if (response.ok) {
-        const places = await response.json()
+      const [listResponse, placesResponse] = await Promise.all([
+        fetch(`/api/admin/lists/${list.id}`),
+        fetch(`/api/admin/lists/${list.id}/places`)
+      ])
+
+      // Load list details
+      if (listResponse.ok) {
+        const listDetails = await listResponse.json()
+        setEditListData({
+          id: list.id,
+          name: list.name,
+          publisher_name: list.publisher,
+          description: listDetails.description || '',
+          location_scope: list.location_scope || '',
+          external_link: list.link_url || ''
+        })
+      } else {
+        // Fallback to basic data if API fails
+        setEditListData({
+          id: list.id,
+          name: list.name,
+          publisher_name: list.publisher,
+          description: '',
+          location_scope: list.location_scope || '',
+          external_link: list.link_url || ''
+        })
+      }
+
+      // Load places
+      if (placesResponse.ok) {
+        const places = await placesResponse.json()
         setEditSelectedPlaces(places)
       } else {
         console.error('Failed to fetch list places')
         setEditSelectedPlaces([])
       }
     } catch (error) {
-      console.error('Error fetching list places:', error)
+      console.error('Error fetching list details:', error)
+      // Fallback to basic data
+      setEditListData({
+        id: list.id,
+        name: list.name,
+        publisher_name: list.publisher,
+        description: '',
+        location_scope: list.location_scope || '',
+        external_link: list.link_url || ''
+      })
       setEditSelectedPlaces([])
     }
     
