@@ -133,7 +133,7 @@ export default function ListManagementPage() {
   }, [])
 
   // Debounced search function for Google Places
-  const searchPlaces = useCallback(async (searchTerm: string) => {
+  const searchPlaces = useCallback(async (searchTerm: string, locationScope?: string) => {
     if (!searchTerm.trim()) {
       setSearchResults([])
       return
@@ -141,7 +141,12 @@ export default function ListManagementPage() {
 
     setIsSearching(true)
     try {
-      const results = await placesService.searchPlaces(searchTerm.trim())
+      // Combine search term with location scope for better geographic filtering
+      const combinedQuery = locationScope && locationScope.trim() 
+        ? `${searchTerm.trim()} ${locationScope.trim()}`
+        : searchTerm.trim()
+      
+      const results = await placesService.searchPlaces(combinedQuery)
       
       // Format results for the UI
       const formattedResults = results.map(place => ({
@@ -165,14 +170,20 @@ export default function ListManagementPage() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (placeSearchTerm) {
-        searchPlaces(placeSearchTerm)
+        // Use location scope from the appropriate modal context
+        const locationScope = showCreateModal 
+          ? newListData.location_scope 
+          : showEditModal 
+            ? editListData.location_scope 
+            : ''
+        searchPlaces(placeSearchTerm, locationScope)
       } else {
         setSearchResults([])
       }
     }, 500) // 500ms debounce
 
     return () => clearTimeout(timeoutId)
-  }, [placeSearchTerm, searchPlaces])
+  }, [placeSearchTerm, searchPlaces, showCreateModal, showEditModal, newListData.location_scope, editListData.location_scope])
 
   // Load data on component mount
   useEffect(() => {
