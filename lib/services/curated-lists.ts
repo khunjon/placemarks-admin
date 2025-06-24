@@ -155,14 +155,34 @@ class CuratedListsAdminService {
   async deleteCuratedList(listId: string) {
     try {
       const client = this.checkClient()
-      const { error } = await client
+      
+      // First, delete all associated list_places records to avoid foreign key constraint violations
+      const { error: placesError } = await client
+        .from('list_places')
+        .delete()
+        .eq('list_id', listId)
+
+      if (placesError) {
+        console.error(`Failed to delete places for list ${listId}:`, placesError)
+        return { error: placesError }
+      }
+
+      // Then delete the list itself
+      const { error: listError } = await client
         .from('lists')
         .delete()
         .eq('id', listId)
         .eq('is_curated', true)
 
-      return { error }
+      if (listError) {
+        console.error(`Failed to delete list ${listId}:`, listError)
+        return { error: listError }
+      }
+
+      console.log(`Successfully deleted curated list ${listId} and its associated places`)
+      return { error: null }
     } catch (error) {
+      console.error(`Unexpected error deleting list ${listId}:`, error)
       return { error }
     }
   }
