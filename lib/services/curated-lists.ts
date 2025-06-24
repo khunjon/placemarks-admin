@@ -67,6 +67,30 @@ class CuratedListsAdminService {
     }
   }
 
+  // Get unique location scopes
+  async getUniqueLocationScopes() {
+    try {
+      const client = this.checkClient()
+      const { data, error } = await client
+        .from('lists')
+        .select('location_scope')
+        .not('location_scope', 'is', null)
+        .neq('location_scope', '')
+        .order('location_scope', { ascending: true })
+      
+      if (error) return { data: null, error }
+      
+      // Extract unique location scopes and filter out duplicates
+      const uniqueLocationScopes = [...new Set(data.map(item => item.location_scope))]
+        .filter(Boolean)
+        .sort()
+      
+      return { data: uniqueLocationScopes, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
   // Get all curated lists with optional filtering
   async getCuratedLists(filters?: {
     location_scope?: string | null

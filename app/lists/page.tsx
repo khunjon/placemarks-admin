@@ -76,6 +76,8 @@ export default function ListManagementPage() {
   const [placesService] = useState(() => new PlacesService())
   const [publishers, setPublishers] = useState<string[]>([])
   const [loadingPublishers, setLoadingPublishers] = useState(false)
+  const [locationScopes, setLocationScopes] = useState<string[]>([])
+  const [loadingLocationScopes, setLoadingLocationScopes] = useState(false)
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -104,6 +106,25 @@ export default function ListManagementPage() {
       setLoadingPublishers(false)
     }
   }, [loadingPublishers])
+
+  const loadLocationScopes = useCallback(async () => {
+    if (loadingLocationScopes) return
+    
+    setLoadingLocationScopes(true)
+    try {
+      const response = await fetch('/api/admin/location-scopes')
+      if (response.ok) {
+        const locationScopesData = await response.json()
+        setLocationScopes(locationScopesData)
+      } else {
+        console.error('Failed to fetch location scopes:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching location scopes:', error)
+    } finally {
+      setLoadingLocationScopes(false)
+    }
+  }, [loadingLocationScopes])
 
 
   const loadData = useCallback(async () => {
@@ -630,6 +651,28 @@ export default function ListManagementPage() {
                       userSelect: 'none',
                       transition: 'background-color 0.2s ease'
                     }}
+                    onClick={() => handleSort('status')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#2a2a2a'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span>Status</span>
+                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
+                        {getSortIcon('status')}
+                      </span>
+                    </div>
+                  </th>
+                  <th 
+                    style={{
+                      ...dashboardStyles.tableHeader,
+                      cursor: 'pointer',
+                      userSelect: 'none',
+                      transition: 'background-color 0.2s ease'
+                    }}
                     onClick={() => handleSort('created')}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
@@ -689,28 +732,6 @@ export default function ListManagementPage() {
                       </span>
                     </div>
                   </th>
-                  <th 
-                    style={{
-                      ...dashboardStyles.tableHeader,
-                      cursor: 'pointer',
-                      userSelect: 'none',
-                      transition: 'background-color 0.2s ease'
-                    }}
-                    onClick={() => handleSort('status')}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#2a2a2a'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                      <span>Status</span>
-                      <span style={{ fontSize: '12px', opacity: 0.7, minWidth: '16px', textAlign: 'center' }}>
-                        {getSortIcon('status')}
-                      </span>
-                    </div>
-                  </th>
                   <th style={dashboardStyles.tableHeader}>Actions</th>
                 </tr>
               </thead>
@@ -745,9 +766,6 @@ export default function ListManagementPage() {
                           )}
                         </div>
                       </td>
-                      <td style={dashboardStyles.tableCell}>{list.created}</td>
-                      <td style={dashboardStyles.tableCell}>{list.publisher}</td>
-                      <td style={dashboardStyles.tableCell}>{list.location_scope || 'Global'}</td>
                       <td style={dashboardStyles.tableCell}>
                         <span style={{ 
                           color: getStatusColor(list.status),
@@ -760,6 +778,9 @@ export default function ListManagementPage() {
                           {list.status}
                         </span>
                       </td>
+                      <td style={dashboardStyles.tableCell}>{list.created}</td>
+                      <td style={dashboardStyles.tableCell}>{list.publisher}</td>
+                      <td style={dashboardStyles.tableCell}>{list.location_scope || 'Global'}</td>
                       <td style={dashboardStyles.tableCell}>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button
@@ -846,6 +867,19 @@ export default function ListManagementPage() {
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                  Location Scope
+                </label>
+                <AutocompleteInput
+                  value={newListData.location_scope}
+                  onChange={(value) => setNewListData({...newListData, location_scope: value})}
+                  suggestions={locationScopes}
+                  placeholder="Enter or select location scope (e.g., Bangkok, Sukhumvit)..."
+                  style={dashboardStyles.input}
+                  onFocus={loadLocationScopes}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
                   Description
                 </label>
                 <input
@@ -854,18 +888,6 @@ export default function ListManagementPage() {
                   onChange={(e) => setNewListData({...newListData, description: e.target.value})}
                   style={dashboardStyles.input}
                   placeholder="Enter list description..."
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Location Scope
-                </label>
-                <input
-                  type="text"
-                  value={newListData.location_scope}
-                  onChange={(e) => setNewListData({...newListData, location_scope: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="e.g., Bangkok, Sukhumvit..."
                 />
               </div>
               <div>
@@ -1093,6 +1115,19 @@ export default function ListManagementPage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
+                    Location Scope
+                  </label>
+                  <AutocompleteInput
+                    value={editListData.location_scope}
+                    onChange={(value) => setEditListData({...editListData, location_scope: value})}
+                    suggestions={locationScopes}
+                    placeholder="Enter or select location scope (e.g., Bangkok, Sukhumvit)..."
+                    style={dashboardStyles.input}
+                    onFocus={loadLocationScopes}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
                     Description
                   </label>
                   <input
@@ -1101,18 +1136,6 @@ export default function ListManagementPage() {
                     onChange={(e) => setEditListData({...editListData, description: e.target.value})}
                     style={dashboardStyles.input}
                     placeholder="Enter list description..."
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Location Scope
-                  </label>
-                  <input
-                    type="text"
-                    value={editListData.location_scope}
-                    onChange={(e) => setEditListData({...editListData, location_scope: e.target.value})}
-                    style={dashboardStyles.input}
-                    placeholder="e.g., Bangkok, Sukhumvit..."
                   />
                 </div>
                 <div>
