@@ -344,6 +344,8 @@ export default function ListManagementPage() {
       })
 
       if (response.ok) {
+        const createdList = await response.json()
+        console.log(`✅ Successfully created list: ${createdList.name}`)
         setShowCreateModal(false)
         setNewListData({ 
           name: '', 
@@ -356,10 +358,15 @@ export default function ListManagementPage() {
         setPlaceSearchTerm('')
         loadData() // Refresh the list
       } else {
-        console.error('Failed to create list')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('❌ Failed to create list:', errorData.error)
+        // Still refresh in case of partial success
+        loadData()
       }
     } catch (error) {
-      console.error('Error creating list:', error)
+      console.error('❌ Unexpected error creating list:', error)
+      // Always refresh on error to ensure UI consistency
+      loadData()
     }
   }
 
@@ -459,6 +466,8 @@ export default function ListManagementPage() {
       })
 
       if (response.ok) {
+        const updatedList = await response.json()
+        console.log(`✅ Successfully updated list: ${updatedList.name}`)
         setShowEditModal(false)
         setEditListData({ 
           id: '',
@@ -472,10 +481,15 @@ export default function ListManagementPage() {
         setPlaceSearchTerm('')
         loadData() // Refresh the list
       } else {
-        console.error('Failed to update list')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('❌ Failed to update list:', errorData.error)
+        // Still refresh in case of partial success
+        loadData()
       }
     } catch (error) {
-      console.error('Error updating list:', error)
+      console.error('❌ Unexpected error updating list:', error)
+      // Always refresh on error to ensure UI consistency
+      loadData()
     }
   }
 
@@ -486,7 +500,13 @@ export default function ListManagementPage() {
           method: 'DELETE'
         })
         if (response.ok) {
+          console.log(`✅ Successfully deleted list ${listId}`)
           loadData() // Refresh the list
+        } else {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+          console.error(`❌ Failed to delete list ${listId}:`, errorData.error)
+          // Still refresh to ensure UI is in sync with server state
+          loadData()
         }
       } else if (action === 'hide' || action === 'show') {
         const list = lists.find(l => l.id === listId)
@@ -498,12 +518,20 @@ export default function ListManagementPage() {
             body: JSON.stringify({ visibility: newVisibility })
           })
           if (response.ok) {
+            console.log(`✅ Successfully ${action === 'hide' ? 'hid' : 'published'} list ${listId}`)
             loadData() // Refresh the list
+          } else {
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+            console.error(`❌ Failed to ${action} list ${listId}:`, errorData.error)
+            // Still refresh to ensure UI is in sync with server state
+            loadData()
           }
         }
       }
     } catch (error) {
-      console.error(`Error ${action}ing list:`, error)
+      console.error(`❌ Unexpected error ${action}ing list ${listId}:`, error)
+      // Always refresh on error to ensure UI consistency
+      loadData()
     }
   }
 
@@ -761,53 +789,68 @@ export default function ListManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {sortedData.map((list) => (
-                  <tr key={list.id}>
-                    <td style={dashboardStyles.tableCell}>
-                      <div>
-                        <div style={{ fontWeight: '600' }}>{list.name}</div>
-                        <div style={{ fontSize: '12px', color: '#999' }}>{list.link_url}</div>
-                      </div>
-                    </td>
-                    <td style={dashboardStyles.tableCell}>{list.created}</td>
-                    <td style={dashboardStyles.tableCell}>@{list.publisher}</td>
-                    <td style={dashboardStyles.tableCell}>{list.location_scope || 'Global'}</td>
-                    <td style={dashboardStyles.tableCell}>
-                      <span style={{ 
-                        color: getStatusColor(list.status),
-                        fontSize: '12px',
-                        fontWeight: '600',
-                        padding: '4px 8px',
-                        backgroundColor: `${getStatusColor(list.status)}20`,
-                        borderRadius: '4px'
-                      }}>
-                        {list.status}
-                      </span>
-                    </td>
-                    <td style={dashboardStyles.tableCell}>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button
-                          onClick={() => handleEditList(list)}
-                          style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
-                        >
-                          EDIT
-                        </button>
-                        <button
-                          onClick={() => handleListAction(list.status === 'HIDDEN' ? 'show' : 'hide', list.id)}
-                          style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px', color: '#f59e0b', borderColor: '#f59e0b' }}
-                        >
-                          {list.status === 'HIDDEN' ? 'PUBLISH' : 'HIDE'}
-                        </button>
-                        <button
-                          onClick={() => handleListAction('delete', list.id)}
-                          style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px', color: '#ef4444', borderColor: '#ef4444' }}
-                        >
-                          DELETE
-                        </button>
-                      </div>
+                {sortedData.length > 0 ? (
+                  sortedData.map((list) => (
+                    <tr key={list.id}>
+                      <td style={dashboardStyles.tableCell}>
+                        <div>
+                          <div style={{ fontWeight: '600' }}>{list.name}</div>
+                          <div style={{ fontSize: '12px', color: '#999' }}>{list.link_url}</div>
+                        </div>
+                      </td>
+                      <td style={dashboardStyles.tableCell}>{list.created}</td>
+                      <td style={dashboardStyles.tableCell}>@{list.publisher}</td>
+                      <td style={dashboardStyles.tableCell}>{list.location_scope || 'Global'}</td>
+                      <td style={dashboardStyles.tableCell}>
+                        <span style={{ 
+                          color: getStatusColor(list.status),
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          padding: '4px 8px',
+                          backgroundColor: `${getStatusColor(list.status)}20`,
+                          borderRadius: '4px'
+                        }}>
+                          {list.status}
+                        </span>
+                      </td>
+                      <td style={dashboardStyles.tableCell}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => handleEditList(list)}
+                            style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
+                          >
+                            EDIT
+                          </button>
+                          <button
+                            onClick={() => handleListAction(list.status === 'HIDDEN' ? 'show' : 'hide', list.id)}
+                            style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px', color: '#f59e0b', borderColor: '#f59e0b' }}
+                          >
+                            {list.status === 'HIDDEN' ? 'PUBLISH' : 'HIDE'}
+                          </button>
+                          <button
+                            onClick={() => handleListAction('delete', list.id)}
+                            style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px', color: '#ef4444', borderColor: '#ef4444' }}
+                          >
+                            DELETE
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} style={{
+                      ...dashboardStyles.tableCell,
+                      textAlign: 'center',
+                      padding: '48px 16px',
+                      color: '#666',
+                      fontSize: '16px',
+                      fontStyle: 'italic'
+                    }}>
+                      There are no curated lists
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
