@@ -8,6 +8,7 @@ import { useSorting } from '@/lib/hooks/useSorting'
 import { PlacesService } from '@/lib/services/places'
 import { dashboardStyles } from '@/lib/styles/dashboard-styles'
 import { getDisplayStatus, getStatusColor } from '@/lib/utils/list-helpers'
+import { AutocompleteInput } from '@/components/ui/autocomplete-input'
 
 interface DisplayList {
   id: string
@@ -73,6 +74,8 @@ export default function ListManagementPage() {
   }>>([])
   const [isSearching, setIsSearching] = useState(false)
   const [placesService] = useState(() => new PlacesService())
+  const [publishers, setPublishers] = useState<string[]>([])
+  const [loadingPublishers, setLoadingPublishers] = useState(false)
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -82,6 +85,25 @@ export default function ListManagementPage() {
   const goBack = () => {
     router.push('/')
   }
+
+  const loadPublishers = useCallback(async () => {
+    if (loadingPublishers) return
+    
+    setLoadingPublishers(true)
+    try {
+      const response = await fetch('/api/admin/publishers')
+      if (response.ok) {
+        const publishersData = await response.json()
+        setPublishers(publishersData)
+      } else {
+        console.error('Failed to fetch publishers:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching publishers:', error)
+    } finally {
+      setLoadingPublishers(false)
+    }
+  }, [loadingPublishers])
 
 
   const loadData = useCallback(async () => {
@@ -699,11 +721,32 @@ export default function ListManagementPage() {
                       <td style={dashboardStyles.tableCell}>
                         <div>
                           <div style={{ fontWeight: '600' }}>{list.name}</div>
-                          <div style={{ fontSize: '12px', color: '#999' }}>{list.link_url}</div>
+                          {list.link_url && (
+                            <div style={{ fontSize: '12px', color: '#999' }}>
+                              <a 
+                                href={list.link_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{ 
+                                  color: '#00ffff', 
+                                  textDecoration: 'none',
+                                  cursor: 'pointer'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.textDecoration = 'underline'
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.textDecoration = 'none'
+                                }}
+                              >
+                                {list.link_url.replace(/^https?:\/\//, '')}
+                              </a>
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td style={dashboardStyles.tableCell}>{list.created}</td>
-                      <td style={dashboardStyles.tableCell}>@{list.publisher}</td>
+                      <td style={dashboardStyles.tableCell}>{list.publisher}</td>
                       <td style={dashboardStyles.tableCell}>{list.location_scope || 'Global'}</td>
                       <td style={dashboardStyles.tableCell}>
                         <span style={{ 
@@ -792,12 +835,13 @@ export default function ListManagementPage() {
                 <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
                   Publisher Name
                 </label>
-                <input
-                  type="text"
+                <AutocompleteInput
                   value={newListData.publisher_name}
-                  onChange={(e) => setNewListData({...newListData, publisher_name: e.target.value})}
+                  onChange={(value) => setNewListData({...newListData, publisher_name: value})}
+                  suggestions={publishers}
+                  placeholder="Enter or select publisher name..."
                   style={dashboardStyles.input}
-                  placeholder="Enter publisher name..."
+                  onFocus={loadPublishers}
                 />
               </div>
               <div>
@@ -1038,12 +1082,13 @@ export default function ListManagementPage() {
                   <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
                     Publisher Name
                   </label>
-                  <input
-                    type="text"
+                  <AutocompleteInput
                     value={editListData.publisher_name}
-                    onChange={(e) => setEditListData({...editListData, publisher_name: e.target.value})}
+                    onChange={(value) => setEditListData({...editListData, publisher_name: value})}
+                    suggestions={publishers}
+                    placeholder="Enter or select publisher name..."
                     style={dashboardStyles.input}
-                    placeholder="Enter publisher name..."
+                    onFocus={loadPublishers}
                   />
                 </div>
                 <div>
@@ -1272,7 +1317,7 @@ export default function ListManagementPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Publisher</div>
-                  <div style={{ color: '#fff' }}>@{selectedList.publisher}</div>
+                  <div style={{ color: '#fff' }}>{selectedList.publisher}</div>
                 </div>
                 <div>
                   <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Status</div>

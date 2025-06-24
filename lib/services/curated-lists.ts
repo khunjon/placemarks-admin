@@ -43,6 +43,30 @@ class CuratedListsAdminService {
     }
   }
 
+  // Get unique publisher names
+  async getUniquePublishers() {
+    try {
+      const client = this.checkClient()
+      const { data, error } = await client
+        .from('lists')
+        .select('publisher_name')
+        .not('publisher_name', 'is', null)
+        .neq('publisher_name', '')
+        .order('publisher_name', { ascending: true })
+      
+      if (error) return { data: null, error }
+      
+      // Extract unique publisher names and filter out duplicates
+      const uniquePublishers = [...new Set(data.map(item => item.publisher_name))]
+        .filter(Boolean)
+        .sort()
+      
+      return { data: uniquePublishers, error: null }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
+
   // Get all curated lists with optional filtering
   async getCuratedLists(filters?: {
     location_scope?: string | null
