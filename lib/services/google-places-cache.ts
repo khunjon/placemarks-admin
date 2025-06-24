@@ -51,21 +51,27 @@ export class GooglePlacesCacheService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async searchPlacesInCache(query: string, _location?: { lat: number; lng: number }, _radius?: number): Promise<GooglePlacesCacheEntry[]> {
     try {
+      console.log(`🔍 [GooglePlacesCache] Searching cache for: "${query}"`)
+      
+      const searchPattern = `%${query}%`
+      
       const { data, error } = await this.supabase!
         .from('google_places_cache')
         .select('*')
-        .or(`name.ilike.%${query}%,formatted_address.ilike.%${query}%`)
+        .or(`name.ilike."${searchPattern}",formatted_address.ilike."${searchPattern}"`)
         .gt('expires_at', new Date().toISOString())
         .order('cached_at', { ascending: false })
         .limit(20)
 
       if (error) {
+        console.error('❌ [GooglePlacesCache] Cache search error:', error)
         return []
       }
 
+      console.log(`✅ [GooglePlacesCache] Found ${data?.length || 0} cached results`)
       return data ?? []
     } catch (error) {
-      console.log('❌ [Cache] Search failed:', error)
+      console.error('❌ [GooglePlacesCache] Unexpected cache search error:', error)
       return []
     }
   }

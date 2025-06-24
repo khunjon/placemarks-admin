@@ -1,4 +1,5 @@
 import { GooglePlacesCacheService } from './google-places-cache'
+import { createClient } from '@/lib/supabase/client'
 
 interface PlaceSearchResult {
   id: string
@@ -19,6 +20,7 @@ interface PlaceSearchResult {
 
 export class PlacesService {
   private cacheService: GooglePlacesCacheService
+  private supabase = createClient()
 
   constructor() {
     this.cacheService = new GooglePlacesCacheService()
@@ -30,14 +32,25 @@ export class PlacesService {
   async searchPlaces(query: string, location?: { lat: number; lng: number }, radius?: number): Promise<PlaceSearchResult[]> {
     if (!query.trim()) return []
 
-    // First, try to get results from cache
+    console.log(`🔍 [PlacesService] Starting search for: "${query}"`)
+
+    // Step 1: Check main places table for recently added places
+    const databaseResults = await this.searchPlacesInDatabase(query)
+    
+    if (databaseResults.length > 0) {
+      console.log(`✅ [PlacesService] Found ${databaseResults.length} results in main database`)
+      return databaseResults
+    }
+
+    // Step 2: Check cache for Google Places results
     const cachedResults = await this.cacheService.searchPlacesInCache(query, location, radius)
     
     if (cachedResults.length > 0) {
+      console.log(`✅ [PlacesService] Found ${cachedResults.length} cached results`)
       return this.formatCachedResults(cachedResults)
     }
 
-    // If no cache results, call Google Places API via our API route
+    // Step 3: Call Google Places API as last resort
     try {
       console.log(`🟢 [Google Places API] Searching for: "${query}"`)
       const apiResults = await this.callGooglePlacesAPI(query, location, radius)
@@ -51,6 +64,35 @@ export class PlacesService {
     } catch (error) {
       console.error('❌ [Google Places API] Error:', error)
       return this.getMockResults(query) // Fallback to mock data on error
+    }
+  }
+
+  /**
+   * Search for places in the main database table
+   */
+  private async searchPlacesInDatabase(query: string): Promise<PlaceSearchResult[]> {
+    try {
+      console.log(`🗄️ [PlacesService] Searching main database for: "${query}"`)
+      
+      const searchPattern = `%${query}%`
+      
+      const { data, error } = await this.supabase!
+        .from('places')
+        .select('*')
+        .or(`name.ilike."${searchPattern}",address.ilike."${searchPattern}"`)
+        .order('created_at', { ascending: false })
+        .limit(20)
+
+      if (error) {
+        console.error('❌ [PlacesService] Database search error:', error)
+        return []
+      }
+
+      console.log(`✅ [PlacesService] Found ${data?.length || 0} database results`)
+      return data?.map(place => this.formatDatabaseResult(place)) ?? []
+    } catch (error) {
+      console.error('❌ [PlacesService] Unexpected database search error:', error)
+      return []
     }
   }
 
@@ -105,16 +147,30 @@ export class PlacesService {
     const response = await fetch(`/api/places/search?${params}`)
     
     if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(`Places API error: ${response.status} ${errorData.error || response.statusText}`)
+      let errorMessage = `HTTP ${response.status} ${response.statusText}`
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.error || errorMessage
+      } catch {
+        // If we can't parse the error response, use the HTTP status
+      }
+      console.error('❌ [Google Places API] Request failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorMessage,
+        url: `/api/places/search?${params}`
+      })
+      throw new Error(`Places API error: ${errorMessage}`)
     }
 
     const data = await response.json()
     
     if (data.error) {
+      console.error('❌ [Google Places API] API returned error:', data.error)
       throw new Error(`Places API error: ${data.error}`)
     }
 
+    console.log(`✅ [Google Places API] Received ${data.results?.length || 0} results`)
     return data.results || []
   }
 
@@ -152,6 +208,33 @@ export class PlacesService {
       place_id: place.place_id,
       types: place.types,
       photos: place.photos
+    }
+  }
+
+  /**
+   * Format a database result
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private formatDatabaseResult(place: any): PlaceSearchResult {
+    // Extract coordinates from PostGIS Point if available
+    let lat, lng
+    if (place.coordinates && typeof place.coordinates === 'object') {
+      // PostGIS Point format: {x: lng, y: lat}
+      lat = place.coordinates.y
+      lng = place.coordinates.x
+    }
+
+    return {
+      id: place.google_place_id,
+      name: place.name,
+      address: place.address,
+      lat: lat,
+      lng: lng,
+      rating: undefined, // Not stored in main places table
+      price_level: place.price_level,
+      place_id: place.google_place_id,
+      types: place.google_types,
+      photos: [] // Not stored in main places table
     }
   }
 

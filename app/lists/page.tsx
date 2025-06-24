@@ -134,12 +134,13 @@ export default function ListManagementPage() {
     }
 
     setIsSearching(true)
+    
+    // Combine search term with location scope for better geographic filtering
+    const combinedQuery = locationScope && locationScope.trim() 
+      ? `${searchTerm.trim()} ${locationScope.trim()}`
+      : searchTerm.trim()
+    
     try {
-      // Combine search term with location scope for better geographic filtering
-      const combinedQuery = locationScope && locationScope.trim() 
-        ? `${searchTerm.trim()} ${locationScope.trim()}`
-        : searchTerm.trim()
-      
       const results = await placesService.searchPlaces(combinedQuery)
       
       // Format results for the UI
@@ -151,14 +152,22 @@ export default function ListManagementPage() {
         lng: place.lng
       }))
       
-      setSearchResults(formattedResults)
+      // Filter out already selected places
+      const currentlySelected = showEditModal ? editSelectedPlaces : selectedPlaces
+      const filteredResults = formattedResults.filter(place => 
+        !currentlySelected.some(selected => selected.id === place.id)
+      )
+      
+      setSearchResults(filteredResults)
     } catch (error) {
-      console.error('❌ [Places Search] Error:', error)
+      console.error('❌ [Places Search] Error searching for places:', error)
+      console.error('❌ [Places Search] Query was:', combinedQuery)
+      console.error('❌ [Places Search] Location scope:', locationScope)
       setSearchResults([])
     } finally {
       setIsSearching(false)
     }
-  }, [placesService])
+  }, [placesService, showEditModal, editSelectedPlaces, selectedPlaces])
 
   // Debounce search to avoid too many API calls
   useEffect(() => {
