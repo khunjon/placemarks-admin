@@ -51,13 +51,10 @@ export class GooglePlacesCacheService {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async searchPlacesInCache(query: string, _location?: { lat: number; lng: number }, _radius?: number): Promise<GooglePlacesCacheEntry[]> {
     try {
-      console.log(`🔍 [GooglePlacesCache] Searching cache for: "${query}"`)
-      
       // Try multiple search patterns for better matching
       const searchTerms = this.getSearchPatterns(query)
-      console.log(`🔍 [GooglePlacesCache] Using search patterns:`, searchTerms)
       
-      const { data, error } = await this.supabase!
+      const { data } = await this.supabase!
         .from('google_places_cache')
         .select('*')
         .or(searchTerms.join(','))
@@ -65,15 +62,8 @@ export class GooglePlacesCacheService {
         .order('cached_at', { ascending: false })
         .limit(20)
 
-      if (error) {
-        console.error('❌ [GooglePlacesCache] Cache search error:', error)
-        return []
-      }
-
-      console.log(`✅ [GooglePlacesCache] Found ${data?.length || 0} cached results`)
       return data ?? []
-    } catch (error) {
-      console.error('❌ [GooglePlacesCache] Unexpected cache search error:', error)
+    } catch {
       return []
     }
   }
@@ -104,8 +94,6 @@ export class GooglePlacesCacheService {
    * Get a specific place from cache by place_id
    */
   async getPlaceFromCache(placeId: string): Promise<GooglePlaceDetailsCache | null> {
-    console.log(`🔍 [GooglePlacesCache] Looking up place_id: ${placeId}`)
-    
     try {
       const { data, error } = await this.supabase!
         .from('google_places_cache')
@@ -115,14 +103,11 @@ export class GooglePlacesCacheService {
         .single()
 
       if (error) {
-        console.log(`📭 [GooglePlacesCache] Place ${placeId} not in cache or expired`)
         return null
       }
 
-      console.log(`✅ [GooglePlacesCache] Found cached place: ${data?.name || 'Unknown'}`)
       return data
-    } catch (error) {
-      console.error(`❌ [GooglePlacesCache] Error getting place ${placeId}:`, error)
+    } catch {
       return null
     }
   }
@@ -158,9 +143,8 @@ export class GooglePlacesCacheService {
           onConflict: 'google_place_id',
           ignoreDuplicates: false 
         })
-    } catch (error) {
-      // Silently fail cache operations - log for debugging
-      console.log('❌ [Cache] Cache operation failed:', error)
+    } catch {
+      // Silently fail cache operations
     }
   }
 
@@ -169,8 +153,6 @@ export class GooglePlacesCacheService {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async cachePlace(place: any): Promise<void> {
-    console.log(`💾 [GooglePlacesCache] Caching detailed place: ${place.name}`)
-
     try {
       const now = new Date()
       const expiresAt = new Date(now.getTime() + (this.CACHE_DURATION_DAYS * 24 * 60 * 60 * 1000))
@@ -193,20 +175,14 @@ export class GooglePlacesCacheService {
         expires_at: expiresAt.toISOString()
       }
 
-      const { error } = await this.supabase!
+      await this.supabase!
         .from('google_places_cache')
         .upsert(cacheEntry, { 
           onConflict: 'google_place_id',
           ignoreDuplicates: false 
         })
-
-      if (error) {
-        console.error('❌ [GooglePlacesCache] Error caching place details:', error)
-      } else {
-        console.log(`✅ [GooglePlacesCache] Successfully cached place details: ${place.name}`)
-      }
-    } catch (error) {
-      console.error('❌ [GooglePlacesCache] Unexpected error caching place details:', error)
+    } catch {
+      // Silently fail cache operations
     }
   }
 
@@ -231,11 +207,8 @@ export class GooglePlacesCacheService {
       const expired = expiredResult.count || 0
       const fresh = total - expired
 
-      console.log(`📊 [GooglePlacesCache] Cache stats - Total: ${total}, Fresh: ${fresh}, Expired: ${expired}`)
-      
       return { total, expired, fresh }
-    } catch (error) {
-      console.error('❌ [GooglePlacesCache] Error getting cache stats:', error)
+    } catch {
       return { total: 0, expired: 0, fresh: 0 }
     }
   }
@@ -244,8 +217,6 @@ export class GooglePlacesCacheService {
    * Clean up expired cache entries
    */
   async cleanupExpiredEntries(): Promise<number> {
-    console.log('🧹 [GooglePlacesCache] Cleaning up expired entries')
-
     try {
       const { data, error } = await this.supabase!
         .from('google_places_cache')
@@ -254,15 +225,11 @@ export class GooglePlacesCacheService {
         .select('place_id')
 
       if (error) {
-        console.error('❌ [GooglePlacesCache] Error cleaning up expired entries:', error)
         return 0
       }
 
-      const deletedCount = data?.length || 0
-      console.log(`✅ [GooglePlacesCache] Cleaned up ${deletedCount} expired entries`)
-      return deletedCount
-    } catch (error) {
-      console.error('❌ [GooglePlacesCache] Unexpected error during cleanup:', error)
+      return data?.length || 0
+    } catch {
       return 0
     }
   }

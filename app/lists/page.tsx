@@ -163,9 +163,7 @@ export default function ListManagementPage() {
       
       setSearchResults(filteredResults)
     } catch (error) {
-      console.error('❌ [Places Search] Error searching for places:', error)
-      console.error('❌ [Places Search] Search term was:', searchTerm.trim())
-      console.error('❌ [Places Search] Location scope:', locationScope)
+      console.error('❌ Places search error:', error)
       setSearchResults([])
     } finally {
       setIsSearching(false)
@@ -268,27 +266,15 @@ export default function ListManagementPage() {
   }
 
   const handleAddPlace = (place: { id: string, name: string, address: string }) => {
-    console.log(`🔍 [Frontend] handleAddPlace called with:`, place)
-    console.log(`🔍 [Frontend] showEditModal:`, showEditModal)
-    console.log(`🔍 [Frontend] Current editSelectedPlaces:`, editSelectedPlaces)
-    
     if (showEditModal) {
       // Check if place is already added to edit list
       if (!editSelectedPlaces.find(p => p.id === place.id)) {
-        const newEditSelectedPlaces = [...editSelectedPlaces, place]
-        console.log(`✅ [Frontend] Adding place to edit list. New list:`, newEditSelectedPlaces)
-        setEditSelectedPlaces(newEditSelectedPlaces)
-      } else {
-        console.log(`ℹ️ [Frontend] Place ${place.name} already in edit list`)
+        setEditSelectedPlaces([...editSelectedPlaces, place])
       }
     } else {
       // Check if place is already added to create list
       if (!selectedPlaces.find(p => p.id === place.id)) {
-        const newSelectedPlaces = [...selectedPlaces, place]
-        console.log(`✅ [Frontend] Adding place to create list. New list:`, newSelectedPlaces)
-        setSelectedPlaces(newSelectedPlaces)
-      } else {
-        console.log(`ℹ️ [Frontend] Place ${place.name} already in create list`)
+        setSelectedPlaces([...selectedPlaces, place])
       }
     }
     setPlaceSearchTerm('')
@@ -336,10 +322,9 @@ export default function ListManagementPage() {
       // Load places
       if (placesResponse.ok) {
         const places = await placesResponse.json()
-        console.log(`🔍 [Frontend] Loaded ${places.length} places for list ${list.id}:`, places)
         setEditSelectedPlaces(places)
       } else {
-        console.error('❌ [Frontend] Failed to fetch list places:', placesResponse.status, placesResponse.statusText)
+        console.error('Failed to fetch list places')
         setEditSelectedPlaces([])
       }
     } catch (error) {
@@ -362,36 +347,22 @@ export default function ListManagementPage() {
 
   const handleUpdateList = async () => {
     try {
-      console.log(`🔍 [Frontend] Preparing to update list ${editListData.id}`)
-      console.log(`🔍 [Frontend] editSelectedPlaces state:`, editSelectedPlaces)
-      console.log(`🔍 [Frontend] editSelectedPlaces length:`, editSelectedPlaces.length)
-      
-      const requestBody = {
-        name: editListData.name,
-        publisher_name: editListData.publisher_name,
-        description: editListData.description,
-        location_scope: editListData.location_scope,
-        external_link: editListData.external_link,
-        places: editSelectedPlaces
-      }
-      
-      console.log(`🔍 [Frontend] Complete request body:`, JSON.stringify(requestBody, null, 2))
-      
-      console.log(`🌐 [Frontend] Making PUT request to: /api/admin/lists/${editListData.id}`)
-      
       const response = await fetch(`/api/admin/lists/${editListData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify({
+          name: editListData.name,
+          publisher_name: editListData.publisher_name,
+          description: editListData.description,
+          location_scope: editListData.location_scope,
+          external_link: editListData.external_link,
+          places: editSelectedPlaces
+        })
       })
-
-      console.log(`🌐 [Frontend] Response status: ${response.status} ${response.statusText}`)
-      console.log(`🌐 [Frontend] Response headers:`, [...response.headers.entries()])
 
       if (response.ok) {
         const updatedList = await response.json()
-        console.log(`✅ [Frontend] Successfully updated list: ${updatedList.name}`)
-        console.log(`✅ [Frontend] Updated list response:`, updatedList)
+        console.log(`✅ Successfully updated list: ${updatedList.name}`)
         setShowEditModal(false)
         setEditListData({ 
           id: '',
@@ -405,9 +376,8 @@ export default function ListManagementPage() {
         setPlaceSearchTerm('')
         loadData() // Refresh the list
       } else {
-        console.error(`❌ [Frontend] Request failed with status: ${response.status}`)
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('❌ [Frontend] Failed to update list:', errorData.error)
+        console.error('❌ Failed to update list:', errorData.error)
         // Still refresh in case of partial success
         loadData()
       }

@@ -32,13 +32,10 @@ export class PlacesService {
   async searchPlaces(query: string, location?: { lat: number; lng: number }, radius?: number): Promise<PlaceSearchResult[]> {
     if (!query.trim()) return []
 
-    console.log(`🔍 [PlacesService] Starting search for: "${query}"`)
-
     // Step 1: Check main places table for recently added places (exact query first)
     const databaseResults = await this.searchPlacesInDatabase(query)
     
     if (databaseResults.length > 0) {
-      console.log(`✅ [PlacesService] Found ${databaseResults.length} results in main database`)
       return databaseResults
     }
 
@@ -46,7 +43,6 @@ export class PlacesService {
     const cachedResults = await this.cacheService.searchPlacesInCache(query, location, radius)
     
     if (cachedResults.length > 0) {
-      console.log(`✅ [PlacesService] Found ${cachedResults.length} cached results`)
       return this.formatCachedResults(cachedResults)
     }
 
@@ -72,28 +68,18 @@ export class PlacesService {
    */
   private async searchPlacesInDatabase(query: string): Promise<PlaceSearchResult[]> {
     try {
-      console.log(`🗄️ [PlacesService] Searching main database for: "${query}"`)
-      
       // Use the same flexible search patterns as cache
       const searchTerms = this.getSearchPatterns(query)
-      console.log(`🗄️ [PlacesService] Using search patterns:`, searchTerms)
       
-      const { data, error } = await this.supabase!
+      const { data } = await this.supabase!
         .from('places')
         .select('*')
         .or(searchTerms.join(','))
         .order('created_at', { ascending: false })
         .limit(20)
 
-      if (error) {
-        console.error('❌ [PlacesService] Database search error:', error)
-        return []
-      }
-
-      console.log(`✅ [PlacesService] Found ${data?.length || 0} database results`)
       return data?.map(place => this.formatDatabaseResult(place)) ?? []
-    } catch (error) {
-      console.error('❌ [PlacesService] Unexpected database search error:', error)
+    } catch {
       return []
     }
   }
@@ -124,19 +110,14 @@ export class PlacesService {
    * Get detailed place information by place_id
    */
   async getPlaceDetails(placeId: string): Promise<PlaceSearchResult | null> {
-    console.log(`🔍 [PlacesService] Getting details for place_id: ${placeId}`)
-
     // Check cache first
     const cachedPlace = await this.cacheService.getPlaceFromCache(placeId)
     if (cachedPlace) {
-      console.log(`✅ [PlacesService] Using cached details for: ${cachedPlace.name}`)
       return this.formatCachedResult(cachedPlace)
     }
 
     // Call Google Places API for details via our API route
-
     try {
-      console.log(`🟢 [PlacesService] Making Google Places Details API call for: ${placeId}`)
       const placeDetails = await this.callGooglePlaceDetailsAPI(placeId)
       
       if (placeDetails) {
@@ -147,7 +128,7 @@ export class PlacesService {
 
       return null
     } catch (error) {
-      console.error('❌ [PlacesService] Error getting place details:', error)
+      console.error('Error getting place details:', error)
       return null
     }
   }
@@ -341,7 +322,6 @@ export class PlacesService {
       place.address.toLowerCase().includes(query.toLowerCase())
     )
 
-    console.log(`🎭 [PlacesService] Using ${filtered.length} mock results for "${query}" (development mode)`)
     return filtered
   }
 

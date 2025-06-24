@@ -8,10 +8,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  console.log(`🚀 [List API] GET endpoint hit for list details!`)
   try {
     const { id } = await params
-    console.log(`🔍 [List API] Fetching details for list: ${id}`)
     const { data, error } = await curatedListsAdmin.getCuratedListWithPlaces(id)
     
     if (error) {
@@ -44,14 +42,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  console.log(`🚀 [List Update API] PUT endpoint hit!`)
-  
   try {
-    console.log(`🔍 [List Update API] Parsing request body...`)
     const body = await request.json()
-    console.log(`🔍 [List Update API] Received PUT request for list update`)
-    console.log(`🔍 [List Update API] Request body keys:`, Object.keys(body))
-    console.log(`🔍 [List Update API] Full request body:`, JSON.stringify(body, null, 2))
     
     const updates = {
       name: body.name,
@@ -97,30 +89,21 @@ export async function PUT(
     // If places are provided, update them too
     if (body.places && Array.isArray(body.places)) {
       try {
-        console.log(`🔄 [List Update API] Updating ${body.places.length} places for list ${id}`)
-        console.log(`🔄 [List Update API] Places to add:`, JSON.stringify(body.places, null, 2))
-        
         const { error: placesError } = await curatedListsAdmin.updateListPlaces(id, body.places)
         
         if (placesError) {
-          console.error('❌ [List Update API] Error updating places:', placesError)
+          console.error('Error updating places:', placesError)
           // Don't fail the entire update if places update fails, but log the error
-        } else {
-          console.log(`✅ [List Update API] Successfully updated ${body.places.length} places for list ${id}`)
         }
       } catch (placesError) {
-        console.error('❌ [List Update API] Unexpected error updating places:', placesError)
+        console.error('Unexpected error updating places:', placesError)
         // Don't fail the entire update if places update fails
       }
-    } else {
-      console.log(`ℹ️ [List Update API] No places provided in request body for list ${id}`)
     }
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error('❌ [List Update API] Unexpected error in list PUT:', error)
-    console.error('❌ [List Update API] Error details:', JSON.stringify(error, null, 2))
-    console.error('❌ [List Update API] Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Unexpected error in list PUT:', error)
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }
