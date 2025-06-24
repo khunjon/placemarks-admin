@@ -42,7 +42,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  console.log(`🚀 [List Update API] PUT endpoint hit!`)
+  
   try {
+    console.log(`🔍 [List Update API] Parsing request body...`)
     const body = await request.json()
     console.log(`🔍 [List Update API] Received PUT request for list update`)
     console.log(`🔍 [List Update API] Request body keys:`, Object.keys(body))
@@ -113,7 +116,9 @@ export async function PUT(
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error('Unexpected error in list PUT:', error)
+    console.error('❌ [List Update API] Unexpected error in list PUT:', error)
+    console.error('❌ [List Update API] Error details:', JSON.stringify(error, null, 2))
+    console.error('❌ [List Update API] Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }

@@ -377,15 +377,21 @@ export default function ListManagementPage() {
       
       console.log(`🔍 [Frontend] Complete request body:`, JSON.stringify(requestBody, null, 2))
       
+      console.log(`🌐 [Frontend] Making PUT request to: /api/admin/lists/${editListData.id}`)
+      
       const response = await fetch(`/api/admin/lists/${editListData.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       })
 
+      console.log(`🌐 [Frontend] Response status: ${response.status} ${response.statusText}`)
+      console.log(`🌐 [Frontend] Response headers:`, [...response.headers.entries()])
+
       if (response.ok) {
         const updatedList = await response.json()
-        console.log(`✅ Successfully updated list: ${updatedList.name}`)
+        console.log(`✅ [Frontend] Successfully updated list: ${updatedList.name}`)
+        console.log(`✅ [Frontend] Updated list response:`, updatedList)
         setShowEditModal(false)
         setEditListData({ 
           id: '',
@@ -399,8 +405,9 @@ export default function ListManagementPage() {
         setPlaceSearchTerm('')
         loadData() // Refresh the list
       } else {
+        console.error(`❌ [Frontend] Request failed with status: ${response.status}`)
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('❌ Failed to update list:', errorData.error)
+        console.error('❌ [Frontend] Failed to update list:', errorData.error)
         // Still refresh in case of partial success
         loadData()
       }
