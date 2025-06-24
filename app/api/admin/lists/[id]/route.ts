@@ -131,7 +131,7 @@ export async function DELETE(
       )
     }
 
-    return NextResponse.json({ success: true }, { status: 204 })
+    return new NextResponse(null, { status: 204 })
   } catch (error) {
     console.error('Unexpected error in list DELETE:', error)
     return NextResponse.json(
