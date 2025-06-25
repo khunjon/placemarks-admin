@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
 import { extractPhotoReferences } from '@/lib/utils/photo-utils'
+import { placeEnhancement } from './place-enhancement'
 
 // Admin service for curated lists operations
 class CuratedListsAdminService {
@@ -338,33 +339,64 @@ class CuratedListsAdminService {
         .eq('google_place_id', placeData.google_place_id)
         .single()
       
+      let placeId: string
+      let isNewPlace = false
+
       if (!findError && existingPlace) {
-        return { data: existingPlace, error: null }
+        placeId = existingPlace.id
+      } else {
+        // Create new place if it doesn't exist
+        const coordinates = placeData.lat && placeData.lng 
+          ? `POINT(${placeData.lng} ${placeData.lat})`
+          : null
+
+        // Extract photo references instead of storing full URLs
+        const photoReferences = extractPhotoReferences(placeData.photos || [])
+
+        const { data, error } = await client
+          .from('places')
+          .insert({
+            google_place_id: placeData.google_place_id,
+            name: placeData.name,
+            address: placeData.address,
+            coordinates: coordinates as unknown,
+            place_type: 'restaurant', // Default type - primary_type is generated automatically
+            photo_references: photoReferences.length > 0 ? photoReferences : null,
+            photos_urls: null // Explicitly set to null to avoid storing URLs
+          })
+          .select('id')
+          .single()
+
+        if (error || !data) {
+          return { data: null, error }
+        }
+
+        placeId = data.id
+        isNewPlace = true
       }
 
-      // Create new place if it doesn't exist
-      const coordinates = placeData.lat && placeData.lng 
-        ? `POINT(${placeData.lng} ${placeData.lat})`
-        : null
+      // Enhance place with Google Places details (for both new and existing places)
+      // This ensures we have complete data for curated lists
+      console.log(`🔍 [CuratedList] ${isNewPlace ? 'Created' : 'Found'} place ${placeData.name}, checking for enhancement...`)
+      
+      try {
+        const enhancementResult = await placeEnhancement.enhancePlace(placeData.google_place_id)
+        
+        if (enhancementResult.enhanced) {
+          console.log(`✅ [CuratedList] Enhanced place ${placeData.name}`, {
+            fieldsAdded: enhancementResult.fieldsAdded
+          })
+        } else if (enhancementResult.error) {
+          console.error(`⚠️ [CuratedList] Enhancement failed for ${placeData.name}:`, enhancementResult.error)
+        } else {
+          console.log(`ℹ️ [CuratedList] Place ${placeData.name} already has complete data`)
+        }
+      } catch (enhancementError) {
+        // Enhancement failure shouldn't prevent place creation
+        console.error(`⚠️ [CuratedList] Enhancement error for ${placeData.name}:`, enhancementError)
+      }
 
-      // Extract photo references instead of storing full URLs
-      const photoReferences = extractPhotoReferences(placeData.photos || [])
-
-      const { data, error } = await client
-        .from('places')
-        .insert({
-          google_place_id: placeData.google_place_id,
-          name: placeData.name,
-          address: placeData.address,
-          coordinates: coordinates as unknown,
-          place_type: 'restaurant', // Default type - primary_type is generated automatically
-          photo_references: photoReferences.length > 0 ? photoReferences : null,
-          photos_urls: null // Explicitly set to null to avoid storing URLs
-        })
-        .select('id')
-        .single()
-
-      return { data, error }
+      return { data: { id: placeId }, error: null }
     } catch (error) {
       return { data: null, error }
     }
@@ -382,6 +414,8 @@ class CuratedListsAdminService {
     try {
       const client = this.checkClient()
 
+      console.log(`🔄 [CuratedList] Updating list ${listId} with ${places.length} places`)
+
       // Start a transaction-like operation
       // First, remove all existing places from the list
       const { error: removeError } = await client
@@ -394,9 +428,15 @@ class CuratedListsAdminService {
       }
 
       // Process each place and add to list
+      // Note: createPlaceIfNotExists now includes enhancement automatically
       const results = []
+      let processedCount = 0
+
       for (const place of places) {
-        // Create place if it doesn't exist
+        processedCount++
+        console.log(`📍 [CuratedList] Processing place ${processedCount}/${places.length}: ${place.name}`)
+
+        // Create place if it doesn't exist (includes enhancement)
         const { data: placeRecord, error: placeError } = await this.createPlaceIfNotExists({
           google_place_id: place.id,
           name: place.name,
@@ -407,7 +447,7 @@ class CuratedListsAdminService {
         })
 
         if (placeError || !placeRecord) {
-          console.error(`Failed to create/find place ${place.name}:`, placeError)
+          console.error(`❌ [CuratedList] Failed to create/find place ${place.name}:`, placeError)
           continue
         }
 
@@ -421,15 +461,22 @@ class CuratedListsAdminService {
           .select()
 
         if (listPlaceError) {
-          console.error(`Failed to add place ${place.name} to list:`, listPlaceError)
+          console.error(`❌ [CuratedList] Failed to add place ${place.name} to list:`, listPlaceError)
           continue
         }
 
         results.push(listPlaceData)
       }
 
+      console.log(`✅ [CuratedList] Successfully updated list ${listId}`, {
+        totalPlaces: places.length,
+        processedPlaces: processedCount,
+        successfullyAdded: results.length
+      })
+
       return { data: results, error: null }
     } catch (error) {
+      console.error(`❌ [CuratedList] Error updating list places:`, error)
       return { data: null, error }
     }
   }

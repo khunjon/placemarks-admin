@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(npm run lint)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

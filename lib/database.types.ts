@@ -85,6 +85,14 @@ export type Database = {
           google_types: string[] | null
           primary_type: string | null
           price_level: number | null
+          phone: string | null
+          website: string | null
+          google_rating: number | null
+          user_ratings_total: number | null
+          hours_open: Json | null
+          photo_references: Json | null
+          photos_urls: Json | null
+          business_status: string | null
           city_context: Json | null
           bangkok_context: Json | null
           created_at: string
@@ -99,6 +107,14 @@ export type Database = {
           google_types?: string[] | null
           primary_type?: string | null
           price_level?: number | null
+          phone?: string | null
+          website?: string | null
+          google_rating?: number | null
+          user_ratings_total?: number | null
+          hours_open?: Json | null
+          photo_references?: Json | null
+          photos_urls?: Json | null
+          business_status?: string | null
           city_context?: Json | null
           bangkok_context?: Json | null
           created_at?: string
@@ -113,6 +129,14 @@ export type Database = {
           google_types?: string[] | null
           primary_type?: string | null
           price_level?: number | null
+          phone?: string | null
+          website?: string | null
+          google_rating?: number | null
+          user_ratings_total?: number | null
+          hours_open?: Json | null
+          photo_references?: Json | null
+          photos_urls?: Json | null
+          business_status?: string | null
           city_context?: Json | null
           bangkok_context?: Json | null
           created_at?: string
