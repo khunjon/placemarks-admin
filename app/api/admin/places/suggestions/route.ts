@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q')
     
+    // Require at least 2 characters for suggestions
     if (!query || query.trim().length < 2) {
       return NextResponse.json([])
     }

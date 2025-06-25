@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
@@ -23,12 +23,14 @@ export const dynamic = 'force-dynamic'
 export default function PlaceManagementPage() {
   const { loading, authenticated, error, signOut } = useAuth()
   const [searchTerm, setSearchTerm] = useState('')
+  const [activeFilter, setActiveFilter] = useState('')
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [places, setPlaces] = useState<Place[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [placeSuggestions, setPlaceSuggestions] = useState<string[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const router = useRouter()
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleLogout = async () => {
     await signOut()
@@ -38,12 +40,12 @@ export default function PlaceManagementPage() {
     router.push('/')
   }
 
-  const loadData = useCallback(async (searchTerm?: string) => {
+  const loadData = useCallback(async (filterTerm?: string) => {
     setLoadingData(true)
     try {
       const params = new URLSearchParams()
-      if (searchTerm && searchTerm.trim()) {
-        params.append('search', searchTerm.trim())
+      if (filterTerm && filterTerm.trim()) {
+        params.append('search', filterTerm.trim())
         params.append('limit', '50') // Show more results when searching
       } else {
         params.append('limit', '15') // Default to 15 most recent places
@@ -66,32 +68,58 @@ export default function PlaceManagementPage() {
     }
   }, [])
 
-  const loadPlaceSuggestions = useCallback(async () => {
-    if (loadingSuggestions) return
+  const loadPlaceSuggestions = useCallback(async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setPlaceSuggestions([])
+      return
+    }
     
     setLoadingSuggestions(true)
     try {
-      const response = await fetch(`/api/admin/places/suggestions?q=${searchTerm}`)
+      const response = await fetch(`/api/admin/places/suggestions?q=${encodeURIComponent(query)}`)
       if (response.ok) {
         const suggestions = await response.json()
         setPlaceSuggestions(suggestions || [])
       }
     } catch (error) {
       console.error('Error fetching place suggestions:', error)
+      setPlaceSuggestions([])
     } finally {
       setLoadingSuggestions(false)
     }
-  }, [searchTerm, loadingSuggestions])
+  }, [])
 
-  // Handle search term changes
+  // Handle search term changes with debounced suggestions
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value)
+    
+    // Clear existing debounce timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    
+    // Debounce suggestions loading
+    debounceRef.current = setTimeout(() => {
+      loadPlaceSuggestions(value)
+    }, 300)
+  }, [loadPlaceSuggestions])
+
+  // Handle search execution (Enter key or selection)
+  const handleSearchExecute = useCallback((value: string) => {
+    setActiveFilter(value)
     if (value.trim()) {
       loadData(value)
     } else {
       loadData() // Load default 15 places
     }
   }, [loadData])
+
+  // Handle suggestion focus (load suggestions immediately)
+  const handleSuggestionFocus = useCallback(() => {
+    if (searchTerm.length >= 2) {
+      loadPlaceSuggestions(searchTerm)
+    }
+  }, [searchTerm, loadPlaceSuggestions])
 
   // Load data on component mount
   useEffect(() => {
@@ -249,7 +277,7 @@ export default function PlaceManagementPage() {
   const handleRefreshPlace = (placeId: string) => {
     console.log(`Refreshing data for place ${placeId}`)
     // Handle refresh logic here - could reload data or fetch updated place details
-    loadData(searchTerm)
+    loadData(activeFilter)
   }
 
 
@@ -341,7 +369,7 @@ export default function PlaceManagementPage() {
              </div>
              <div style={dashboardStyles.metricValue}>{places.length.toLocaleString()}</div>
              <div style={{ fontSize: '14px', color: '#3b82f6' }}>
-               {searchTerm ? 'Matching' : 'Showing'} <span style={{ color: '#666', marginLeft: '8px' }}>{searchTerm ? 'search criteria' : 'recent places'}</span>
+               {activeFilter ? 'Matching' : 'Showing'} <span style={{ color: '#666', marginLeft: '8px' }}>{activeFilter ? 'search criteria' : 'recent places'}</span>
              </div>
            </div>
          </div>
@@ -355,10 +383,22 @@ export default function PlaceManagementPage() {
               suggestions={placeSuggestions}
               placeholder="Search places by name, address, or type..."
               style={dashboardStyles.input}
-              onFocus={loadPlaceSuggestions}
+              onFocus={handleSuggestionFocus}
+              onEnter={handleSearchExecute}
+              onSelectionComplete={handleSearchExecute}
             />
             <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-              Search through places in the database
+              Type to see suggestions, press Enter or select to search
+              {loadingSuggestions && searchTerm.length >= 2 && (
+                <span style={{ color: '#f59e0b', marginLeft: '8px' }}>
+                  • Loading suggestions...
+                </span>
+              )}
+              {activeFilter && (
+                <span style={{ color: '#00ffff', marginLeft: '8px' }}>
+                  • Currently filtering by: &quot;{activeFilter}&quot;
+                </span>
+              )}
             </div>
           </div>
         </div>

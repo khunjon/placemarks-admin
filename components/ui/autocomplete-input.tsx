@@ -10,6 +10,8 @@ interface AutocompleteInputProps {
   placeholder?: string
   style?: React.CSSProperties
   onFocus?: () => void
+  onEnter?: (value: string) => void
+  onSelectionComplete?: (value: string) => void
   disabled?: boolean
 }
 
@@ -20,6 +22,8 @@ export function AutocompleteInput({
   placeholder,
   style,
   onFocus,
+  onEnter,
+  onSelectionComplete,
   disabled = false
 }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -82,6 +86,12 @@ export function AutocompleteInput({
         e.preventDefault()
         if (selectedIndex >= 0 && selectedIndex < filteredSuggestions.length) {
           handleSelectSuggestion(filteredSuggestions[selectedIndex])
+        } else {
+          // No suggestion selected, trigger search with current value
+          if (onEnter) {
+            onEnter(value)
+          }
+          setIsOpen(false)
         }
         break
       case 'Escape':
@@ -92,15 +102,23 @@ export function AutocompleteInput({
 
   // Handle suggestion selection
   const handleSelectSuggestion = (suggestion: string) => {
+    let selectedValue: string
+    
     if (suggestion.startsWith('Add new: "')) {
       // Extract the value from "Add new: [value]"
-      const newValue = suggestion.slice(11, -1) // Remove 'Add new: "' and trailing '"'
-      onChange(newValue)
+      selectedValue = suggestion.slice(11, -1) // Remove 'Add new: "' and trailing '"'
     } else {
-      onChange(suggestion)
+      selectedValue = suggestion
     }
+    
+    onChange(selectedValue)
     setIsOpen(false)
     inputRef.current?.blur()
+    
+    // Trigger selection complete callback
+    if (onSelectionComplete) {
+      onSelectionComplete(selectedValue)
+    }
   }
 
   return (
