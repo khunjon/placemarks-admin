@@ -4,12 +4,15 @@ import { Database } from '@/lib/database.types'
 
 export const dynamic = 'force-dynamic'
 
-// GET - Fetch places from the database with optional limit and search
+// GET - Fetch place name suggestions for autocomplete
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '15', 10)
-    const search = searchParams.get('search')
+    const query = searchParams.get('q')
+    
+    if (!query || query.trim().length < 2) {
+      return NextResponse.json([])
+    }
     
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
@@ -29,33 +32,27 @@ export async function GET(request: Request) {
       }
     })
     
-    let query = supabase
+    const { data, error } = await supabase
       .from('places')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    // Add search filter if provided
-    if (search && search.trim()) {
-      query = query.or(`name.ilike.%${search}%,address.ilike.%${search}%,place_type.ilike.%${search}%`)
-    }
-    
-    // Apply limit (default 15, max 100 for safety)
-    const safeLimit = Math.min(Math.max(limit, 1), 100)
-    query = query.limit(safeLimit)
-    
-    const { data, error } = await query
+      .select('name')
+      .or(`name.ilike.%${query}%,address.ilike.%${query}%`)
+      .order('name')
+      .limit(10)
     
     if (error) {
-      console.error('Failed to fetch places:', error)
+      console.error('Failed to fetch place suggestions:', error)
       return NextResponse.json(
-        { error: 'Failed to fetch places' }, 
+        { error: 'Failed to fetch suggestions' }, 
         { status: 500 }
       )
     }
 
-    return NextResponse.json(data || [])
+    // Extract unique place names
+    const suggestions = [...new Set(data?.map(place => place.name) || [])]
+    
+    return NextResponse.json(suggestions)
   } catch (error) {
-    console.error('Unexpected error in places GET:', error)
+    console.error('Unexpected error in places suggestions GET:', error)
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }
