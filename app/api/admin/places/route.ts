@@ -53,7 +53,30 @@ export async function GET(request: Request) {
       )
     }
 
-    return NextResponse.json(data || [])
+    // Enhance places data with source information
+    const placesWithSource = await Promise.all((data || []).map(async (place) => {
+      try {
+        // Check if place exists in Google cache
+        const { data: cacheData } = await supabase
+          .from('google_places_cache')
+          .select('place_id')
+          .eq('place_id', place.google_place_id)
+          .single()
+        
+        return {
+          ...place,
+          source: cacheData ? 'BOTH' : 'DB'
+        }
+      } catch {
+        // If cache check fails, assume DB only
+        return {
+          ...place,
+          source: 'DB'
+        }
+      }
+    }))
+
+    return NextResponse.json(placesWithSource)
   } catch (error) {
     console.error('Unexpected error in places GET:', error)
     return NextResponse.json(

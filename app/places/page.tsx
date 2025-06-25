@@ -15,6 +15,7 @@ interface Place {
   place_type?: string
   coordinates?: { x: number; y: number } | { lat: number; lng: number }
   created_at: string
+  source?: 'DB' | 'CACHE' | 'BOTH'
 }
 
 // Force dynamic rendering to prevent static generation issues
@@ -30,9 +31,39 @@ export default function PlaceManagementPage() {
   const [placeSuggestions, setPlaceSuggestions] = useState<string[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [totalPlacesCount, setTotalPlacesCount] = useState<number | null>(null)
+  const [cachedPlacesCount, setCachedPlacesCount] = useState<number | null>(null)
   const [loadingTotalCount, setLoadingTotalCount] = useState(true)
+  const [loadingCachedCount, setLoadingCachedCount] = useState(true)
   const router = useRouter()
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Helper function to get badge styling based on source
+  const getSourceBadge = (source?: string) => {
+    switch (source) {
+      case 'DB':
+        return { text: 'DB', color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' }
+      case 'CACHE':
+        return { text: 'CACHE', color: '#3b82f6', bgColor: 'rgba(59, 130, 246, 0.1)' }
+      case 'BOTH':
+        return { text: 'BOTH', color: '#00ffff', bgColor: 'rgba(0, 255, 255, 0.1)' }
+      default:
+        return { text: 'DB', color: '#10b981', bgColor: 'rgba(16, 185, 129, 0.1)' }
+    }
+  }
+
+  // Helper function to abbreviate address to city, country
+  const abbreviateAddress = (address: string) => {
+    try {
+      // Split address by commas and get last 2 parts (typically city, country)
+      const parts = address.split(',').map(part => part.trim())
+      if (parts.length >= 2) {
+        return parts.slice(-2).join(', ')
+      }
+      return address.length > 50 ? address.substring(0, 47) + '...' : address
+    } catch {
+      return address.length > 50 ? address.substring(0, 47) + '...' : address
+    }
+  }
 
   const handleLogout = async () => {
     await signOut()
@@ -153,13 +184,32 @@ export default function PlaceManagementPage() {
     }
   }, [])
 
+  // Load cached places count
+  const loadCachedPlacesCount = useCallback(async () => {
+    setLoadingCachedCount(true)
+    try {
+      const response = await fetch('/api/admin/places/cache/count')
+      if (response.ok) {
+        const data = await response.json()
+        setCachedPlacesCount(data.count)
+      } else {
+        console.error('Failed to fetch cached places count:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching cached places count:', error)
+    } finally {
+      setLoadingCachedCount(false)
+    }
+  }, [])
+
   // Load data on component mount
   useEffect(() => {
     if (authenticated) {
       loadData()
       loadTotalPlacesCount()
+      loadCachedPlacesCount()
     }
-  }, [authenticated, loadData, loadTotalPlacesCount])
+  }, [authenticated, loadData, loadTotalPlacesCount, loadCachedPlacesCount])
 
   if (loading || loadingData) {
     return (
@@ -383,7 +433,7 @@ export default function PlaceManagementPage() {
       <div style={{ padding: '32px', maxWidth: 'none', margin: '0' }}>
         
                  {/* Overview Cards */}
-         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '32px', maxWidth: '400px' }}>
+         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px', maxWidth: '800px' }}>
            <div style={dashboardStyles.metricsCard}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                <h3 style={dashboardStyles.metricLabel}>Total Places</h3>
@@ -393,7 +443,20 @@ export default function PlaceManagementPage() {
                {loadingTotalCount ? '...' : (totalPlacesCount !== null ? totalPlacesCount.toLocaleString() : 'Error')}
              </div>
              <div style={{ fontSize: '14px', color: '#10b981' }}>
-               Total <span style={{ color: '#666', marginLeft: '8px' }}>in database</span>
+               Main <span style={{ color: '#666', marginLeft: '8px' }}>database</span>
+             </div>
+           </div>
+
+           <div style={dashboardStyles.metricsCard}>
+             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+               <h3 style={dashboardStyles.metricLabel}>Cached Places</h3>
+               <div style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '50%' }}></div>
+             </div>
+             <div style={dashboardStyles.metricValue}>
+               {loadingCachedCount ? '...' : (cachedPlacesCount !== null ? cachedPlacesCount.toLocaleString() : 'Error')}
+             </div>
+             <div style={{ fontSize: '14px', color: '#3b82f6' }}>
+               Google <span style={{ color: '#666', marginLeft: '8px' }}>cache</span>
              </div>
            </div>
          </div>
@@ -474,8 +537,24 @@ export default function PlaceManagementPage() {
                     <tr key={place.id}>
                       <td style={dashboardStyles.tableCell}>
                         <div>
-                          <div style={{ fontWeight: '600' }}>{place.name}</div>
-                          <div style={{ fontSize: '12px', color: '#999' }}>{place.address}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ fontWeight: '600' }}>{place.name}</div>
+                            <span
+                              style={{
+                                ...getSourceBadge(place.source),
+                                backgroundColor: getSourceBadge(place.source).bgColor,
+                                color: getSourceBadge(place.source).color,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px'
+                              }}
+                            >
+                              {getSourceBadge(place.source).text}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#999' }}>{abbreviateAddress(place.address)}</div>
                           <div style={{ fontSize: '11px', color: '#666' }}>ID: {place.google_place_id}</div>
                         </div>
                       </td>
