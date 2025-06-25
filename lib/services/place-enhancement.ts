@@ -236,16 +236,6 @@ export class PlaceEnhancementService {
         fieldsAdded.rating = true
       }
 
-      // User ratings total
-      if (placeDetails.user_ratings_total) {
-        updateData.user_ratings_total = placeDetails.user_ratings_total
-      }
-
-      // Business status
-      if (placeDetails.business_status) {
-        updateData.business_status = placeDetails.business_status
-      }
-
       // Hours
       if (placeDetails.opening_hours && this.isValidHours(placeDetails.opening_hours)) {
         updateData.hours_open = placeDetails.opening_hours

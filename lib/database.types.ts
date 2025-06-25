@@ -9,158 +9,397 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      lists: {
+      check_ins: {
         Row: {
+          comment: string | null
+          companion_type: string | null
+          context: Json | null
+          created_at: string | null
           id: string
+          meal_type: string | null
+          notes: string | null
+          photos: string[] | null
+          place_id: string | null
+          rating: string | null
+          tags: string[] | null
+          timestamp: string | null
+          transportation_method: string | null
+          updated_at: string | null
           user_id: string | null
-          name: string
-          auto_generated: boolean
-          visibility: 'private' | 'friends' | 'public' | 'curated'
-          description: string | null
-          list_type: string | null
-          icon: string | null
-          color: string | null
-          type: 'user' | 'auto' | 'curated' | null
-          is_default: boolean
-          is_curated: boolean
-          publisher_name: string | null
-          publisher_logo_url: string | null
-          external_link: string | null
-          location_scope: string | null
-          curator_priority: number
-          created_at: string
-          updated_at: string
+          visit_duration: number | null
+          weather_context: Json | null
+          would_return: boolean | null
         }
         Insert: {
+          comment?: string | null
+          companion_type?: string | null
+          context?: Json | null
+          created_at?: string | null
           id?: string
+          meal_type?: string | null
+          notes?: string | null
+          photos?: string[] | null
+          place_id?: string | null
+          rating?: string | null
+          tags?: string[] | null
+          timestamp?: string | null
+          transportation_method?: string | null
+          updated_at?: string | null
           user_id?: string | null
-          name: string
-          auto_generated?: boolean
-          visibility?: 'private' | 'friends' | 'public' | 'curated'
-          description?: string | null
-          list_type?: string | null
-          icon?: string | null
-          color?: string | null
-          type?: 'user' | 'auto' | 'curated' | null
-          is_default?: boolean
-          is_curated?: boolean
-          publisher_name?: string | null
-          publisher_logo_url?: string | null
-          external_link?: string | null
-          location_scope?: string | null
-          curator_priority?: number
-          created_at?: string
-          updated_at?: string
+          visit_duration?: number | null
+          weather_context?: Json | null
+          would_return?: boolean | null
         }
         Update: {
+          comment?: string | null
+          companion_type?: string | null
+          context?: Json | null
+          created_at?: string | null
           id?: string
+          meal_type?: string | null
+          notes?: string | null
+          photos?: string[] | null
+          place_id?: string | null
+          rating?: string | null
+          tags?: string[] | null
+          timestamp?: string | null
+          transportation_method?: string | null
+          updated_at?: string | null
           user_id?: string | null
-          name?: string
-          auto_generated?: boolean
-          visibility?: 'private' | 'friends' | 'public' | 'curated'
-          description?: string | null
-          list_type?: string | null
-          icon?: string | null
-          color?: string | null
-          type?: 'user' | 'auto' | 'curated' | null
-          is_default?: boolean
-          is_curated?: boolean
-          publisher_name?: string | null
-          publisher_logo_url?: string | null
-          external_link?: string | null
-          location_scope?: string | null
-          curator_priority?: number
-          created_at?: string
-          updated_at?: string
+          visit_duration?: number | null
+          weather_context?: Json | null
+          would_return?: boolean | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "check_ins_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "check_ins_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      google_places_cache: {
+        Row: {
+          access_count: number | null
+          business_status: string | null
+          cached_at: string | null
+          created_at: string | null
+          current_opening_hours: Json | null
+          expires_at: string | null
+          formatted_address: string | null
+          formatted_phone_number: string | null
+          geometry: Json | null
+          google_place_id: string
+          has_basic_data: boolean | null
+          has_contact_data: boolean | null
+          has_hours_data: boolean | null
+          has_photos_data: boolean | null
+          has_reviews_data: boolean | null
+          international_phone_number: string | null
+          last_accessed: string | null
+          name: string | null
+          opening_hours: Json | null
+          photo_urls: string[] | null
+          photos: Json | null
+          place_id: string | null
+          plus_code: Json | null
+          price_level: number | null
+          rating: number | null
+          reviews: Json | null
+          types: string[] | null
+          updated_at: string | null
+          user_ratings_total: number | null
+          website: string | null
+        }
+        Insert: {
+          access_count?: number | null
+          business_status?: string | null
+          cached_at?: string | null
+          created_at?: string | null
+          current_opening_hours?: Json | null
+          expires_at?: string | null
+          formatted_address?: string | null
+          formatted_phone_number?: string | null
+          geometry?: Json | null
+          google_place_id: string
+          has_basic_data?: boolean | null
+          has_contact_data?: boolean | null
+          has_hours_data?: boolean | null
+          has_photos_data?: boolean | null
+          has_reviews_data?: boolean | null
+          international_phone_number?: string | null
+          last_accessed?: string | null
+          name?: string | null
+          opening_hours?: Json | null
+          photo_urls?: string[] | null
+          photos?: Json | null
+          place_id?: string | null
+          plus_code?: Json | null
+          price_level?: number | null
+          rating?: number | null
+          reviews?: Json | null
+          types?: string[] | null
+          updated_at?: string | null
+          user_ratings_total?: number | null
+          website?: string | null
+        }
+        Update: {
+          access_count?: number | null
+          business_status?: string | null
+          cached_at?: string | null
+          created_at?: string | null
+          current_opening_hours?: Json | null
+          expires_at?: string | null
+          formatted_address?: string | null
+          formatted_phone_number?: string | null
+          geometry?: Json | null
+          google_place_id?: string
+          has_basic_data?: boolean | null
+          has_contact_data?: boolean | null
+          has_hours_data?: boolean | null
+          has_photos_data?: boolean | null
+          has_reviews_data?: boolean | null
+          international_phone_number?: string | null
+          last_accessed?: string | null
+          name?: string | null
+          opening_hours?: Json | null
+          photo_urls?: string[] | null
+          photos?: Json | null
+          place_id?: string | null
+          plus_code?: Json | null
+          price_level?: number | null
+          rating?: number | null
+          reviews?: Json | null
+          types?: string[] | null
+          updated_at?: string | null
+          user_ratings_total?: number | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      lists: {
+        Row: {
+          auto_generated: boolean | null
+          color: string | null
+          created_at: string | null
+          curator_priority: number | null
+          description: string | null
+          external_link: string | null
+          icon: string | null
+          id: string
+          is_curated: boolean | null
+          is_default: boolean | null
+          list_type: string | null
+          location_scope: string | null
+          name: string
+          publisher_logo_url: string | null
+          publisher_name: string | null
+          type: string | null
+          updated_at: string | null
+          user_id: string | null
+          visibility: string | null
+        }
+        Insert: {
+          auto_generated?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          curator_priority?: number | null
+          description?: string | null
+          external_link?: string | null
+          icon?: string | null
+          id?: string
+          is_curated?: boolean | null
+          is_default?: boolean | null
+          list_type?: string | null
+          location_scope?: string | null
+          name: string
+          publisher_logo_url?: string | null
+          publisher_name?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          auto_generated?: boolean | null
+          color?: string | null
+          created_at?: string | null
+          curator_priority?: number | null
+          description?: string | null
+          external_link?: string | null
+          icon?: string | null
+          id?: string
+          is_curated?: boolean | null
+          is_default?: boolean | null
+          list_type?: string | null
+          location_scope?: string | null
+          name?: string
+          publisher_logo_url?: string | null
+          publisher_name?: string | null
+          type?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          visibility?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lists_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       places: {
         Row: {
-          id: string
-          google_place_id: string
-          name: string
-          address: string
-          coordinates: unknown // PostGIS Point
-          place_type: string | null
-          google_types: string[] | null
-          primary_type: string | null
-          price_level: number | null
-          phone: string | null
-          website: string | null
-          google_rating: number | null
-          user_ratings_total: number | null
-          hours_open: Json | null
-          photo_references: Json | null
-          photos_urls: Json | null
-          business_status: string | null
-          city_context: Json | null
+          address: string | null
           bangkok_context: Json | null
-          created_at: string
+          coordinates: unknown | null
+          created_at: string | null
+          google_place_id: string
+          google_rating: number | null
+          google_types: string[]
+          hours: Json | null
+          hours_open: Json | null
+          id: string
+          name: string
+          phone: string | null
+          photo_references: Json | null
+          photos_urls: string[] | null
+          place_type: string | null
+          price_level: number | null
+          primary_type: string | null
+          website: string | null
         }
         Insert: {
-          id?: string
-          google_place_id: string
-          name: string
-          address: string
-          coordinates: unknown
-          place_type?: string | null
-          google_types?: string[] | null
-          primary_type?: string | null
-          price_level?: number | null
-          phone?: string | null
-          website?: string | null
-          google_rating?: number | null
-          user_ratings_total?: number | null
-          hours_open?: Json | null
-          photo_references?: Json | null
-          photos_urls?: Json | null
-          business_status?: string | null
-          city_context?: Json | null
+          address?: string | null
           bangkok_context?: Json | null
-          created_at?: string
+          coordinates?: unknown | null
+          created_at?: string | null
+          google_place_id: string
+          google_rating?: number | null
+          google_types?: string[]
+          hours?: Json | null
+          hours_open?: Json | null
+          id?: string
+          name: string
+          phone?: string | null
+          photo_references?: Json | null
+          photos_urls?: string[] | null
+          place_type?: string | null
+          price_level?: number | null
+          primary_type?: string | null
+          website?: string | null
         }
         Update: {
-          id?: string
-          google_place_id?: string
-          name?: string
-          address?: string
-          coordinates?: unknown
-          place_type?: string | null
-          google_types?: string[] | null
-          primary_type?: string | null
-          price_level?: number | null
-          phone?: string | null
-          website?: string | null
-          google_rating?: number | null
-          user_ratings_total?: number | null
-          hours_open?: Json | null
-          photo_references?: Json | null
-          photos_urls?: Json | null
-          business_status?: string | null
-          city_context?: Json | null
+          address?: string | null
           bangkok_context?: Json | null
-          created_at?: string
+          coordinates?: unknown | null
+          created_at?: string | null
+          google_place_id?: string
+          google_rating?: number | null
+          google_types?: string[]
+          hours?: Json | null
+          hours_open?: Json | null
+          id?: string
+          name?: string
+          phone?: string | null
+          photo_references?: Json | null
+          photos_urls?: string[] | null
+          place_type?: string | null
+          price_level?: number | null
+          primary_type?: string | null
+          website?: string | null
         }
+        Relationships: []
       }
       list_places: {
         Row: {
+          added_at: string | null
           list_id: string
-          place_id: string
-          added_at: string
           notes: string | null
+          personal_rating: number | null
+          place_id: string
+          sort_order: number | null
+          visit_count: number | null
         }
         Insert: {
+          added_at?: string | null
           list_id: string
-          place_id: string
-          added_at?: string
           notes?: string | null
+          personal_rating?: number | null
+          place_id: string
+          sort_order?: number | null
+          visit_count?: number | null
         }
         Update: {
+          added_at?: string | null
           list_id?: string
-          place_id?: string
-          added_at?: string
           notes?: string | null
+          personal_rating?: number | null
+          place_id?: string
+          sort_order?: number | null
+          visit_count?: number | null
         }
+        Relationships: [
+          {
+            foreignKeyName: "list_places_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "list_places_place_id_fkey"
+            columns: ["place_id"]
+            isOneToOne: false
+            referencedRelation: "places"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          auth_provider: string
+          avatar_url: string | null
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          preferences: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          auth_provider?: string
+          avatar_url?: string | null
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          preferences?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          auth_provider?: string
+          avatar_url?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          preferences?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -169,45 +408,75 @@ export type Database = {
     Functions: {
       get_curated_lists: {
         Args: {
-          p_location_scope?: string | null
-          p_list_type?: string | null
-          p_publisher_name?: string | null
-          p_min_priority?: number | null
+          p_location_scope?: string
+          p_list_type?: string
+          p_publisher_name?: string
+          p_min_priority?: number
         }
-        Returns: Database['public']['Tables']['lists']['Row'][]
-      }
-      get_curated_list_with_places: {
-        Args: {
-          list_uuid: string
-        }
-        Returns: (Database['public']['Tables']['lists']['Row'] & {
-          places: Database['public']['Tables']['places']['Row'][]
-        })[]
-      }
-      get_curated_lists_stats: {
-        Args: Record<PropertyKey, never>
         Returns: {
-          total_curated_lists: number
-          total_places_in_curated_lists: number
-          publishers_count: number
-          location_scopes_count: number
-          avg_places_per_list: number
-          most_recent_update: string
+          id: string
+          name: string
+          description: string
+          list_type: string
+          icon: string
+          color: string
+          type: string
+          visibility: string
+          is_curated: boolean
+          publisher_name: string
+          publisher_logo_url: string
+          external_link: string
+          location_scope: string
+          curator_priority: number
+          created_at: string
+          updated_at: string
+          place_count: number
         }[]
       }
-      search_places_near_location: {
+      get_curated_list_with_places: {
+        Args: { list_uuid: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          list_type: string
+          icon: string
+          color: string
+          type: string
+          visibility: string
+          is_curated: boolean
+          publisher_name: string
+          publisher_logo_url: string
+          external_link: string
+          location_scope: string
+          curator_priority: number
+          created_at: string
+          updated_at: string
+          places: Json
+        }[]
+      }
+      upsert_place_with_rich_data: {
         Args: {
-          lat: number
-          lng: number
-          radius_meters?: number
+          google_place_id_param: string
+          name_param: string
+          address_param: string
+          place_type_param?: string
+          google_types_param?: string[]
+          primary_type_param?: string
+          price_level_param?: number
+          bangkok_context_param?: Json
+          google_rating_param?: number
+          phone_param?: string
+          website_param?: string
+          hours_open_param?: Json
+          photos_urls_param?: string[]
+          coordinates_param?: unknown
         }
-        Returns: Database['public']['Tables']['places']['Row'][]
+        Returns: string
       }
       update_curator_priorities: {
-        Args: {
-          list_priorities: string
-        }
-        Returns: void
+        Args: { list_priorities: Json }
+        Returns: number
       }
     }
     Enums: {

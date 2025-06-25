@@ -21,9 +21,9 @@ interface DisplayList {
   link_url: string
   views: number
   likes: number
-  visibility: string
+  visibility: string | null
   location_scope: string | null
-  curator_priority: number
+  curator_priority: number | null
 }
 
 export default function ListManagementPage() {
@@ -150,7 +150,7 @@ export default function ListManagementPage() {
           name: list.name,
           publisher: list.publisher_name || 'Unknown',
           places: 0, // Will be updated by fetching list details if needed
-          created: new Date(list.created_at).toLocaleDateString(),
+          created: list.created_at ? new Date(list.created_at).toLocaleDateString() : 'Unknown',
           status: getDisplayStatus(list.visibility),
           photo: list.publisher_logo_url || '',
           link_url: list.external_link || '',

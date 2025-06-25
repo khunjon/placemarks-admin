@@ -1,8 +1,9 @@
-export const getDisplayStatus = (visibility: string): string => {
+export const getDisplayStatus = (visibility: string | null): string => {
   switch (visibility) {
     case 'public': return 'ACTIVE'
     case 'curated': return 'ACTIVE'
     case 'private': return 'HIDDEN'
+    case null: return 'DRAFT'
     default: return 'DRAFT'
   }
 }
