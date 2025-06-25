@@ -13,6 +13,7 @@ interface AutocompleteInputProps {
   onEnter?: (value: string) => void
   onSelectionComplete?: (value: string) => void
   disabled?: boolean
+  disableAddNew?: boolean
 }
 
 export function AutocompleteInput({
@@ -24,7 +25,8 @@ export function AutocompleteInput({
   onFocus,
   onEnter,
   onSelectionComplete,
-  disabled = false
+  disabled = false,
+  disableAddNew = false
 }: AutocompleteInputProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
@@ -40,14 +42,14 @@ export function AutocompleteInput({
       const filtered = suggestions.filter(suggestion =>
         suggestion.toLowerCase().includes(value.toLowerCase())
       )
-      // Add "Add new: [input]" option if the exact value doesn't exist
-      if (!suggestions.some(s => s.toLowerCase() === value.toLowerCase()) && value.trim()) {
+      // Add "Add new: [input]" option if the exact value doesn't exist and not disabled
+      if (!disableAddNew && !suggestions.some(s => s.toLowerCase() === value.toLowerCase()) && value.trim()) {
         filtered.push(`Add new: "${value}"`)
       }
       setFilteredSuggestions(filtered)
     }
     setSelectedIndex(-1)
-  }, [value, suggestions])
+  }, [value, suggestions, disableAddNew])
 
   // Handle input focus
   const handleFocus = () => {

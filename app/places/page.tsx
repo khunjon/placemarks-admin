@@ -29,6 +29,8 @@ export default function PlaceManagementPage() {
   const [loadingData, setLoadingData] = useState(true)
   const [placeSuggestions, setPlaceSuggestions] = useState<string[]>([])
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const [totalPlacesCount, setTotalPlacesCount] = useState<number | null>(null)
+  const [loadingTotalCount, setLoadingTotalCount] = useState(true)
   const router = useRouter()
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -121,12 +123,43 @@ export default function PlaceManagementPage() {
     }
   }, [searchTerm, loadPlaceSuggestions])
 
+  // Handle clearing/resetting search
+  const handleClearSearch = useCallback(() => {
+    setSearchTerm('')
+    setActiveFilter('')
+    setPlaceSuggestions([])
+    // Clear any pending debounce
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current)
+    }
+    loadData() // Load default 15 places
+  }, [loadData])
+
+  // Load total places count
+  const loadTotalPlacesCount = useCallback(async () => {
+    setLoadingTotalCount(true)
+    try {
+      const response = await fetch('/api/admin/places/count')
+      if (response.ok) {
+        const data = await response.json()
+        setTotalPlacesCount(data.count)
+      } else {
+        console.error('Failed to fetch total places count:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error fetching total places count:', error)
+    } finally {
+      setLoadingTotalCount(false)
+    }
+  }, [])
+
   // Load data on component mount
   useEffect(() => {
     if (authenticated) {
       loadData()
+      loadTotalPlacesCount()
     }
-  }, [authenticated, loadData])
+  }, [authenticated, loadData, loadTotalPlacesCount])
 
   if (loading || loadingData) {
     return (
@@ -350,26 +383,17 @@ export default function PlaceManagementPage() {
       <div style={{ padding: '32px', maxWidth: 'none', margin: '0' }}>
         
                  {/* Overview Cards */}
-         <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', marginBottom: '32px' }}>
+         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', marginBottom: '32px', maxWidth: '400px' }}>
            <div style={dashboardStyles.metricsCard}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
                <h3 style={dashboardStyles.metricLabel}>Total Places</h3>
                <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
              </div>
-             <div style={dashboardStyles.metricValue}>{places.length.toLocaleString()}</div>
+             <div style={dashboardStyles.metricValue}>
+               {loadingTotalCount ? '...' : (totalPlacesCount !== null ? totalPlacesCount.toLocaleString() : 'Error')}
+             </div>
              <div style={{ fontSize: '14px', color: '#10b981' }}>
                Total <span style={{ color: '#666', marginLeft: '8px' }}>in database</span>
-             </div>
-           </div>
-
-           <div style={dashboardStyles.metricsCard}>
-             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-               <h3 style={dashboardStyles.metricLabel}>Filtered Results</h3>
-               <div style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '50%' }}></div>
-             </div>
-             <div style={dashboardStyles.metricValue}>{places.length.toLocaleString()}</div>
-             <div style={{ fontSize: '14px', color: '#3b82f6' }}>
-               {activeFilter ? 'Matching' : 'Showing'} <span style={{ color: '#666', marginLeft: '8px' }}>{activeFilter ? 'search criteria' : 'recent places'}</span>
              </div>
            </div>
          </div>
@@ -377,16 +401,43 @@ export default function PlaceManagementPage() {
         {/* Search Bar */}
         <div style={{ marginBottom: '32px' }}>
           <div style={{ maxWidth: '600px' }}>
-            <AutocompleteInput
-              value={searchTerm}
-              onChange={handleSearchChange}
-              suggestions={placeSuggestions}
-              placeholder="Search places by name, address, or type..."
-              style={dashboardStyles.input}
-              onFocus={handleSuggestionFocus}
-              onEnter={handleSearchExecute}
-              onSelectionComplete={handleSearchExecute}
-            />
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div style={{ flex: 1 }}>
+                <AutocompleteInput
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  suggestions={placeSuggestions}
+                  placeholder="Search places by name, address, or type..."
+                  style={dashboardStyles.input}
+                  onFocus={handleSuggestionFocus}
+                  onEnter={handleSearchExecute}
+                  onSelectionComplete={handleSearchExecute}
+                  disableAddNew={true}
+                />
+              </div>
+              {activeFilter && (
+                <button
+                  onClick={handleClearSearch}
+                  style={{
+                    ...dashboardStyles.buttonSecondary,
+                    padding: '12px 16px',
+                    whiteSpace: 'nowrap',
+                    color: '#ef4444',
+                    borderColor: '#ef4444'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ef4444'
+                    e.currentTarget.style.color = '#fff'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.color = '#ef4444'
+                  }}
+                >
+                  CLEAR SEARCH
+                </button>
+              )}
+            </div>
             <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
               Type to see suggestions, press Enter or select to search
               {loadingSuggestions && searchTerm.length >= 2 && (
@@ -406,7 +457,7 @@ export default function PlaceManagementPage() {
         {/* Places Management Section */}
         <div style={dashboardStyles.chartContainer}>
           <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>
-            Places Database ({places.length})
+            {activeFilter ? `Search Results (${places.length})` : `Recent Places (${places.length})`}
           </h3>
           <table style={dashboardStyles.metricsTable}>
             <thead>
