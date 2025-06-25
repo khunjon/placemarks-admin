@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { PlacePhoto } from '@/components/ui/place-photo'
+import { PhotoReference } from '@/lib/utils/photo-utils'
 
 interface Place {
   id: number
@@ -11,6 +13,7 @@ interface Place {
   address: string
   googlePlaceId: string
   defaultPhoto: string
+  photoReferences?: PhotoReference[]
   lastRefreshed: string
   thumbsUp: number
   thumbsDown: number
@@ -431,18 +434,11 @@ export default function PlaceManagementPage() {
                 <tr key={place.id}>
                   <td style={dashboardStyles.tableCell}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ 
-                        width: '50px', 
-                        height: '50px', 
-                        backgroundColor: '#333', 
-                        borderRadius: '4px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '12px'
-                      }}>
-                        IMG
-                      </div>
+                      <PlacePhoto 
+                        photoReferences={place.photoReferences}
+                        placeName={place.name}
+                        maxWidth={100}
+                      />
                       <div>
                         <div style={{ fontWeight: '600' }}>{place.name}</div>
                         <div style={{ fontSize: '12px', color: '#999' }}>{place.address}</div>

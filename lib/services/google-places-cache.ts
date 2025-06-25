@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client'
+import { extractPhotoReferences } from '@/lib/utils/photo-utils'
 
 interface GooglePlacesCacheEntry {
   place_id: string
@@ -17,6 +18,7 @@ interface GooglePlacesCacheEntry {
     photo_reference: string
     height: number
     width: number
+    html_attributions?: string[]
   }>
   cached_at: string
   expires_at: string
@@ -132,7 +134,7 @@ export class GooglePlacesCacheService {
         types: place.types || [],
         rating: place.rating,
         price_level: place.price_level,
-        photos: place.photos || [],
+        photos: extractPhotoReferences(place.photos || []),
         cached_at: now.toISOString(),
         expires_at: expiresAt.toISOString()
       }))
@@ -166,7 +168,7 @@ export class GooglePlacesCacheService {
         types: place.types || [],
         rating: place.rating,
         price_level: place.price_level,
-        photos: place.photos || [],
+        photos: extractPhotoReferences(place.photos || []),
         formatted_phone_number: place.formatted_phone_number,
         website: place.website,
         opening_hours: place.opening_hours,

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/lib/database.types'
+import { extractPhotoReferences } from '@/lib/utils/photo-utils'
 
 // Admin service for curated lists operations
 class CuratedListsAdminService {
@@ -325,6 +326,7 @@ class CuratedListsAdminService {
     address: string
     lat?: number
     lng?: number
+    photos?: unknown[]
   }) {
     try {
       const client = this.checkClient()
@@ -345,6 +347,9 @@ class CuratedListsAdminService {
         ? `POINT(${placeData.lng} ${placeData.lat})`
         : null
 
+      // Extract photo references instead of storing full URLs
+      const photoReferences = extractPhotoReferences(placeData.photos || [])
+
       const { data, error } = await client
         .from('places')
         .insert({
@@ -352,7 +357,9 @@ class CuratedListsAdminService {
           name: placeData.name,
           address: placeData.address,
           coordinates: coordinates as unknown,
-          place_type: 'restaurant' // Default type - primary_type is generated automatically
+          place_type: 'restaurant', // Default type - primary_type is generated automatically
+          photo_references: photoReferences.length > 0 ? photoReferences : null,
+          photos_urls: null // Explicitly set to null to avoid storing URLs
         })
         .select('id')
         .single()
@@ -370,6 +377,7 @@ class CuratedListsAdminService {
     address: string
     lat?: number
     lng?: number
+    photos?: unknown[]
   }>) {
     try {
       const client = this.checkClient()
@@ -394,7 +402,8 @@ class CuratedListsAdminService {
           name: place.name,
           address: place.address,
           lat: place.lat,
-          lng: place.lng
+          lng: place.lng,
+          photos: place.photos
         })
 
         if (placeError || !placeRecord) {

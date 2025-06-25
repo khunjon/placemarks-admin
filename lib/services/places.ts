@@ -15,6 +15,7 @@ interface PlaceSearchResult {
     photo_reference: string
     height: number
     width: number
+    html_attributions?: string[]
   }>
 }
 
@@ -180,13 +181,30 @@ export class PlacesService {
   }
 
   /**
-   * Call Google Places Details API (placeholder for future implementation)
+   * Call Google Places Details API via our API route
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async callGooglePlaceDetailsAPI(placeId: string): Promise<any | null> {
-    // TODO: Create API route for place details when needed
-    console.log(`⚠️ [PlacesService] Place details API not implemented yet for: ${placeId}`)
-    return null
+    try {
+      const response = await fetch(`/api/places/details?place_id=${encodeURIComponent(placeId)}`)
+      
+      if (!response.ok) {
+        console.error(`❌ [PlacesService] Place details API error: ${response.status}`)
+        return null
+      }
+
+      const data = await response.json()
+      
+      if (data.error) {
+        console.error('❌ [PlacesService] Place details API returned error:', data.error)
+        return null
+      }
+
+      return data.result || null
+    } catch (error) {
+      console.error('❌ [PlacesService] Error calling place details API:', error)
+      return null
+    }
   }
 
   /**
