@@ -1,25 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/useAuth'
 import { PlacePhoto } from '@/components/ui/place-photo'
 import { PhotoReference } from '@/lib/utils/photo-utils'
 
 interface Place {
-  id: number
+  id: string
   name: string
-  category: string
   address: string
-  googlePlaceId: string
-  defaultPhoto: string
-  photoReferences?: PhotoReference[]
-  lastRefreshed: string
-  thumbsUp: number
-  thumbsDown: number
-  notes: string
-  phoneNumber: string
-  website: string
+  google_place_id: string
+  photo_references?: PhotoReference[]
+  place_type?: string
+  coordinates?: { x: number; y: number } | { lat: number; lng: number }
+  created_at: string
 }
 
 // Force dynamic rendering to prevent static generation issues
@@ -31,6 +26,8 @@ export default function PlaceManagementPage() {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingPlace, setEditingPlace] = useState<Place | null>(null)
+  const [places, setPlaces] = useState<Place[]>([])
+  const [loadingData, setLoadingData] = useState(true)
   const router = useRouter()
 
   const handleLogout = async () => {
@@ -41,7 +38,36 @@ export default function PlaceManagementPage() {
     router.push('/')
   }
 
-  if (loading) {
+  const loadData = useCallback(async () => {
+    setLoadingData(true)
+    try {
+      // For now, we'll load places from the database
+      // In the future, you could create a dedicated API endpoint
+      const response = await fetch('/api/admin/places')
+      
+      if (response.ok) {
+        const placesData = await response.json()
+        setPlaces(placesData || [])
+      } else {
+        console.error('Failed to fetch places:', response.statusText)
+        setPlaces([])
+      }
+    } catch (error) {
+      console.error('Error fetching places:', error)
+      setPlaces([])
+    } finally {
+      setLoadingData(false)
+    }
+  }, [])
+
+  // Load data on component mount
+  useEffect(() => {
+    if (authenticated) {
+      loadData()
+    }
+  }, [authenticated, loadData])
+
+  if (loading || loadingData) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -72,80 +98,6 @@ export default function PlaceManagementPage() {
   if (!authenticated) {
     return null
   }
-
-  // Mock data for places from Google cache
-  const mockPlaces = [
-    { 
-      id: 1, 
-      name: 'Blue Bottle Coffee', 
-      category: 'Coffee Shop',
-      address: '66 Mint St, San Francisco, CA 94103',
-      googlePlaceId: 'ChIJd8BlQ2B-j4ARsJNl3j5KhN8',
-      defaultPhoto: 'https://example.com/bluebottle.jpg',
-      lastRefreshed: '2024-01-15 14:32',
-      thumbsUp: 847,
-      thumbsDown: 23,
-      notes: 'Popular third-wave coffee chain. High quality beans.',
-      phoneNumber: '+1 415-495-3394',
-      website: 'https://bluebottlecoffee.com'
-    },
-    { 
-      id: 2, 
-      name: 'Golden Gate Park', 
-      category: 'Park',
-      address: 'Golden Gate Park, San Francisco, CA',
-      googlePlaceId: 'ChIJVVVVVVV-j4ARsJNl3j5KhN8',
-      defaultPhoto: 'https://example.com/ggpark.jpg',
-      lastRefreshed: '2024-01-18 09:15',
-      thumbsUp: 1247,
-      thumbsDown: 45,
-      notes: 'Large urban park with multiple attractions and gardens.',
-      phoneNumber: '+1 415-831-2700',
-      website: 'https://sfrecpark.org'
-    },
-    { 
-      id: 3, 
-      name: 'Tartine Bakery', 
-      category: 'Bakery',
-      address: '600 Guerrero St, San Francisco, CA 94110',
-      googlePlaceId: 'ChIJXXXXXXX-j4ARsJNl3j5KhN8',
-      defaultPhoto: 'https://example.com/tartine.jpg',
-      lastRefreshed: '2024-02-01 16:45',
-      thumbsUp: 623,
-      thumbsDown: 87,
-      notes: 'Renowned bakery and cafe. Often crowded on weekends.',
-      phoneNumber: '+1 415-487-2600',
-      website: 'https://tartinebakery.com'
-    },
-    { 
-      id: 4, 
-      name: 'Muir Woods National Monument', 
-      category: 'National Park',
-      address: 'Mill Valley, CA 94941',
-      googlePlaceId: 'ChIJYYYYYYY-j4ARsJNl3j5KhN8',
-      defaultPhoto: 'https://example.com/muirwoods.jpg',
-      lastRefreshed: '2024-02-05 11:20',
-      thumbsUp: 1534,
-      thumbsDown: 12,
-      notes: 'Ancient redwood forest. Requires advance reservations.',
-      phoneNumber: '+1 415-388-2595',
-      website: 'https://www.nps.gov/muwo'
-    },
-    { 
-      id: 5, 
-      name: 'Alcatraz Island', 
-      category: 'Tourist Attraction',
-      address: 'Alcatraz Island, San Francisco, CA 94133',
-      googlePlaceId: 'ChIJZZZZZZZ-j4ARsJNl3j5KhN8',
-      defaultPhoto: 'https://example.com/alcatraz.jpg',
-      lastRefreshed: '2024-02-10 13:55',
-      thumbsUp: 892,
-      thumbsDown: 156,
-      notes: 'Historic former federal prison. Ferry tickets required.',
-      phoneNumber: '+1 415-561-4900',
-      website: 'https://www.alcatrazcruises.com'
-    }
-  ]
 
   const dashboardStyles = {
     metricsCard: {
@@ -260,17 +212,18 @@ export default function PlaceManagementPage() {
     }
   }
 
-  const filteredPlaces = mockPlaces
+  const filteredPlaces = places
     .filter(place => 
       place.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       place.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      place.category.toLowerCase().includes(searchTerm.toLowerCase())
+      (place.place_type && place.place_type.toLowerCase().includes(searchTerm.toLowerCase()))
     )
-    .sort((a, b) => b.thumbsUp - a.thumbsUp) // Sort by most thumbs up votes first
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) // Sort by most recent first
 
-  const handleRefreshPlace = (placeId: number) => {
+  const handleRefreshPlace = (placeId: string) => {
     console.log(`Refreshing data for place ${placeId}`)
-    // Handle refresh logic here
+    // Handle refresh logic here - could reload data or fetch updated place details
+    loadData()
   }
 
   const handleEditPlace = (place: Place) => {
@@ -278,11 +231,14 @@ export default function PlaceManagementPage() {
     setShowEditModal(true)
   }
 
-  const handleSavePlace = () => {
-    console.log('Saving place:', editingPlace)
-    setShowEditModal(false)
-    setEditingPlace(null)
-  }
+  // Note: handleSavePlace is currently unused since editing is not implemented
+  // const handleSavePlace = () => {
+  //   console.log('Saving place:', editingPlace)
+  //   setShowEditModal(false)
+  //   setEditingPlace(null)
+  //   // Reload data after save
+  //   loadData()
+  // }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -358,42 +314,20 @@ export default function PlaceManagementPage() {
                <h3 style={dashboardStyles.metricLabel}>Total Places</h3>
                <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
              </div>
-             <div style={dashboardStyles.metricValue}>8,492</div>
+             <div style={dashboardStyles.metricValue}>{places.length.toLocaleString()}</div>
              <div style={{ fontSize: '14px', color: '#10b981' }}>
-               +67 <span style={{ color: '#666', marginLeft: '8px' }}>this week</span>
+               Total <span style={{ color: '#666', marginLeft: '8px' }}>in database</span>
              </div>
            </div>
 
            <div style={dashboardStyles.metricsCard}>
              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-               <h3 style={dashboardStyles.metricLabel}>Category Breakdown</h3>
+               <h3 style={dashboardStyles.metricLabel}>Filtered Results</h3>
                <div style={{ width: '8px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '50%' }}></div>
              </div>
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginTop: '16px' }}>
-               <div>
-                 <div style={{ fontSize: '18px', fontWeight: '600', color: '#00ffff' }}>2,456</div>
-                 <div style={{ fontSize: '12px', color: '#999' }}>Restaurants</div>
-               </div>
-               <div>
-                 <div style={{ fontSize: '18px', fontWeight: '600', color: '#10b981' }}>1,834</div>
-                 <div style={{ fontSize: '12px', color: '#999' }}>Coffee Shops</div>
-               </div>
-               <div>
-                 <div style={{ fontSize: '18px', fontWeight: '600', color: '#f59e0b' }}>1,245</div>
-                 <div style={{ fontSize: '12px', color: '#999' }}>Parks</div>
-               </div>
-               <div>
-                 <div style={{ fontSize: '18px', fontWeight: '600', color: '#8b5cf6' }}>987</div>
-                 <div style={{ fontSize: '12px', color: '#999' }}>Shopping</div>
-               </div>
-               <div>
-                 <div style={{ fontSize: '18px', fontWeight: '600', color: '#ef4444' }}>743</div>
-                 <div style={{ fontSize: '12px', color: '#999' }}>Attractions</div>
-               </div>
-               <div>
-                 <div style={{ fontSize: '18px', fontWeight: '600', color: '#6b7280' }}>1,227</div>
-                 <div style={{ fontSize: '12px', color: '#999' }}>Other</div>
-               </div>
+             <div style={dashboardStyles.metricValue}>{filteredPlaces.length.toLocaleString()}</div>
+             <div style={{ fontSize: '14px', color: '#3b82f6' }}>
+               Matching <span style={{ color: '#666', marginLeft: '8px' }}>search criteria</span>
              </div>
            </div>
          </div>
@@ -403,13 +337,13 @@ export default function PlaceManagementPage() {
           <div style={{ maxWidth: '600px' }}>
             <input
               type="text"
-              placeholder="Search places by name, address, or category..."
+              placeholder="Search places by name, address, or type..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={dashboardStyles.input}
             />
             <div style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
-              Search through Google cached places data
+              Search through places in the database
             </div>
           </div>
         </div>
@@ -417,69 +351,105 @@ export default function PlaceManagementPage() {
         {/* Places Management Section */}
         <div style={dashboardStyles.chartContainer}>
           <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#fff', marginBottom: '16px' }}>
-            Google Cached Places ({filteredPlaces.length})
+            Places Database ({filteredPlaces.length})
           </h3>
           <table style={dashboardStyles.metricsTable}>
             <thead>
               <tr>
                 <th style={dashboardStyles.tableHeader}>Place Details</th>
-                <th style={dashboardStyles.tableHeader}>Category</th>
-                <th style={dashboardStyles.tableHeader}>👍 Votes</th>
-                <th style={dashboardStyles.tableHeader}>Last Refreshed</th>
+                <th style={dashboardStyles.tableHeader}>Type</th>
+                <th style={dashboardStyles.tableHeader}>Coordinates</th>
+                <th style={dashboardStyles.tableHeader}>Created</th>
                 <th style={dashboardStyles.tableHeader}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPlaces.map((place) => (
-                <tr key={place.id}>
-                  <td style={dashboardStyles.tableCell}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <PlacePhoto 
-                        photoReferences={place.photoReferences}
-                        placeName={place.name}
-                        maxWidth={100}
-                      />
-                      <div>
-                        <div style={{ fontWeight: '600' }}>{place.name}</div>
-                        <div style={{ fontSize: '12px', color: '#999' }}>{place.address}</div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>ID: {place.googlePlaceId}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={dashboardStyles.tableCell}>{place.category}</td>
-                  <td style={dashboardStyles.tableCell}>
-                    <div>
-                      <div style={{ color: '#10b981', fontWeight: '600' }}>👍 {place.thumbsUp}</div>
-                      <div style={{ fontSize: '12px', color: '#ef4444' }}>👎 {place.thumbsDown}</div>
-                    </div>
-                  </td>
-                  <td style={dashboardStyles.tableCell}>
-                    <div style={{ fontSize: '12px' }}>{place.lastRefreshed}</div>
-                  </td>
-                  <td style={dashboardStyles.tableCell}>
-                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <button
-                        onClick={() => setSelectedPlace(place)}
-                        style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
-                      >
-                        VIEW
-                      </button>
-                      <button
-                        onClick={() => handleEditPlace(place)}
-                        style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
-                      >
-                        EDIT
-                      </button>
-                      <button
-                        onClick={() => handleRefreshPlace(place.id)}
-                        style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px', color: '#10b981', borderColor: '#10b981' }}
-                      >
-                        REFRESH
-                      </button>
-                    </div>
+              {filteredPlaces.length > 0 ? (
+                filteredPlaces.map((place) => {
+                  // Extract coordinates for display
+                  let lat, lng
+                  if (place.coordinates) {
+                    if ('x' in place.coordinates && 'y' in place.coordinates) {
+                      // PostGIS format: {x: lng, y: lat}
+                      lng = place.coordinates.x
+                      lat = place.coordinates.y
+                    } else if ('lat' in place.coordinates && 'lng' in place.coordinates) {
+                      // Standard format
+                      lat = place.coordinates.lat
+                      lng = place.coordinates.lng
+                    }
+                  }
+
+                  return (
+                    <tr key={place.id}>
+                      <td style={dashboardStyles.tableCell}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <PlacePhoto 
+                            photoReferences={place.photo_references}
+                            placeName={place.name}
+                            maxWidth={100}
+                          />
+                          <div>
+                            <div style={{ fontWeight: '600' }}>{place.name}</div>
+                            <div style={{ fontSize: '12px', color: '#999' }}>{place.address}</div>
+                            <div style={{ fontSize: '11px', color: '#666' }}>ID: {place.google_place_id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td style={dashboardStyles.tableCell}>{place.place_type || 'Unknown'}</td>
+                      <td style={dashboardStyles.tableCell}>
+                        {lat && lng ? (
+                          <div style={{ fontSize: '12px' }}>
+                            <div>{lat.toFixed(4)}, {lng.toFixed(4)}</div>
+                          </div>
+                        ) : (
+                          <div style={{ color: '#666', fontSize: '12px' }}>No coordinates</div>
+                        )}
+                      </td>
+                      <td style={dashboardStyles.tableCell}>
+                        <div style={{ fontSize: '12px' }}>
+                          {new Date(place.created_at).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td style={dashboardStyles.tableCell}>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => setSelectedPlace(place)}
+                            style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
+                          >
+                            VIEW
+                          </button>
+                          <button
+                            onClick={() => handleEditPlace(place)}
+                            style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px' }}
+                          >
+                            EDIT
+                          </button>
+                          <button
+                            onClick={() => handleRefreshPlace(place.id)}
+                            style={{ ...dashboardStyles.buttonSecondary, padding: '4px 8px', color: '#10b981', borderColor: '#10b981' }}
+                          >
+                            REFRESH
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} style={{
+                    ...dashboardStyles.tableCell,
+                    textAlign: 'center',
+                    padding: '48px 16px',
+                    color: '#666',
+                    fontSize: '16px',
+                    fontStyle: 'italic'
+                  }}>
+                    {loadingData ? 'Loading places...' : 'No places found'}
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -503,19 +473,14 @@ export default function PlaceManagementPage() {
             <div style={{ display: 'grid', gap: '16px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Category</div>
-                  <div style={{ color: '#fff' }}>{selectedPlace.category}</div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Type</div>
+                  <div style={{ color: '#fff' }}>{selectedPlace.place_type || 'Unknown'}</div>
                 </div>
                 <div>
-                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>User Votes</div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Created</div>
                   <div style={{ color: '#fff' }}>
-                    <span style={{ color: '#10b981' }}>👍 {selectedPlace.thumbsUp}</span>
-                    <span style={{ color: '#ef4444', marginLeft: '16px' }}>👎 {selectedPlace.thumbsDown}</span>
+                    {new Date(selectedPlace.created_at).toLocaleDateString()}
                   </div>
-                </div>
-                <div>
-                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Last Refreshed</div>
-                  <div style={{ color: '#fff' }}>{selectedPlace.lastRefreshed}</div>
                 </div>
               </div>
               <div>
@@ -524,21 +489,34 @@ export default function PlaceManagementPage() {
               </div>
               <div>
                 <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Google Place ID</div>
-                <div style={{ color: '#00ffff', fontSize: '14px', fontFamily: 'monospace' }}>{selectedPlace.googlePlaceId}</div>
+                <div style={{ color: '#00ffff', fontSize: '14px', fontFamily: 'monospace' }}>{selectedPlace.google_place_id}</div>
               </div>
-              <div>
-                <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Contact</div>
-                <div style={{ color: '#fff' }}>
-                  <div>{selectedPlace.phoneNumber}</div>
-                  <div style={{ color: '#00ffff' }}>{selectedPlace.website}</div>
+              {selectedPlace.coordinates && (
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Coordinates</div>
+                  <div style={{ color: '#fff' }}>
+                    {(() => {
+                      let lat, lng
+                      if ('x' in selectedPlace.coordinates && 'y' in selectedPlace.coordinates) {
+                        lng = selectedPlace.coordinates.x
+                        lat = selectedPlace.coordinates.y
+                      } else if ('lat' in selectedPlace.coordinates && 'lng' in selectedPlace.coordinates) {
+                        lat = selectedPlace.coordinates.lat
+                        lng = selectedPlace.coordinates.lng
+                      }
+                      return lat && lng ? `${lat.toFixed(6)}, ${lng.toFixed(6)}` : 'Invalid coordinates'
+                    })()}
+                  </div>
                 </div>
-              </div>
-              <div>
-                <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Admin Notes</div>
-                <div style={{ color: '#fff', backgroundColor: '#2a2a2a', padding: '12px', borderRadius: '4px' }}>
-                  {selectedPlace.notes || 'No notes added'}
+              )}
+              {selectedPlace.photo_references && selectedPlace.photo_references.length > 0 && (
+                <div>
+                  <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Photos</div>
+                  <div style={{ color: '#fff' }}>
+                    {selectedPlace.photo_references.length} photo reference{selectedPlace.photo_references.length !== 1 ? 's' : ''} available
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -553,56 +531,27 @@ export default function PlaceManagementPage() {
             </h2>
             <div style={{ display: 'grid', gap: '16px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Default Photo URL
-                </label>
-                <input
-                  type="text"
-                  value={editingPlace.defaultPhoto || ''}
-                  onChange={(e) => setEditingPlace({...editingPlace, defaultPhoto: e.target.value})}
-                  style={dashboardStyles.input}
-                  placeholder="Enter new default photo URL..."
-                />
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  This will override the Google-provided photo
-                </div>
+                <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Google Place ID</div>
+                <div style={{ color: '#00ffff', fontSize: '14px', fontFamily: 'monospace' }}>{editingPlace.google_place_id}</div>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                  Admin Notes
-                </label>
-                <textarea
-                  value={editingPlace.notes || ''}
-                  onChange={(e) => setEditingPlace({...editingPlace, notes: e.target.value})}
-                  style={dashboardStyles.textarea}
-                  placeholder="Add internal notes about this place..."
-                />
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  Internal notes for admin use only
-                </div>
+                <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Address</div>
+                <div style={{ color: '#fff' }}>{editingPlace.address}</div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Google Place ID
-                  </label>
-                  <input
-                    type="text"
-                    value={editingPlace.googlePlaceId}
-                    style={{ ...dashboardStyles.input, backgroundColor: '#333', color: '#999' }}
-                    disabled
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '8px', color: '#999', fontSize: '14px' }}>
-                    Last Refreshed
-                  </label>
-                  <input
-                    type="text"
-                    value={editingPlace.lastRefreshed}
-                    style={{ ...dashboardStyles.input, backgroundColor: '#333', color: '#999' }}
-                    disabled
-                  />
+              <div>
+                <div style={{ color: '#999', fontSize: '14px', marginBottom: '4px' }}>Type</div>
+                <div style={{ color: '#fff' }}>{editingPlace.place_type || 'Unknown'}</div>
+              </div>
+              <div style={{ 
+                backgroundColor: '#2a2a2a', 
+                padding: '16px', 
+                borderRadius: '8px',
+                border: '1px solid #444'
+              }}>
+                <div style={{ color: '#f59e0b', fontSize: '14px', marginBottom: '8px' }}>⚠️ Editing Functionality</div>
+                <div style={{ color: '#999', fontSize: '13px', lineHeight: '1.4' }}>
+                  Place editing is not yet implemented. In the future, you&apos;ll be able to update place details, 
+                  manage photo references, and add admin notes here.
                 </div>
               </div>
             </div>
@@ -611,22 +560,14 @@ export default function PlaceManagementPage() {
                 onClick={() => handleRefreshPlace(editingPlace.id)}
                 style={{ ...dashboardStyles.buttonSecondary, backgroundColor: '#10b981', color: '#000', borderColor: '#10b981' }}
               >
-                FORCE REFRESH DATA
+                REFRESH DATA
               </button>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  style={{ ...dashboardStyles.buttonSecondary, backgroundColor: 'transparent' }}
-                >
-                  CANCEL
-                </button>
-                <button
-                  onClick={handleSavePlace}
-                  style={dashboardStyles.button}
-                >
-                  SAVE CHANGES
-                </button>
-              </div>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={dashboardStyles.button}
+              >
+                CLOSE
+              </button>
             </div>
           </div>
         </div>
