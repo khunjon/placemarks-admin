@@ -35,13 +35,41 @@ class CuratedListsAdminService {
   }
 
   // Get admin statistics
-  // Note: This function doesn't exist in the current database schema
-  // Stats are calculated in the API route instead
   async getStats() {
     try {
-      // Return null to indicate no function available
-      return { data: null, error: null }
+      const client = this.checkClient()
+      const { data, error } = await client
+        .rpc('get_curated_lists_stats')
+      
+      if (error) {
+        console.error('Failed to get stats from database function:', error)
+        return { data: null, error }
+      }
+
+      // The function returns an array with one object, extract the first result
+      const statsResult = data?.[0]
+      
+      if (!statsResult) {
+        return { data: null, error: new Error('No stats data returned') }
+      }
+
+      // Transform the result to match the expected format
+      const transformedStats = {
+        total_all_lists: 0, // Will be calculated separately if needed
+        total_curated_lists: Number(statsResult.total_curated_lists) || 0,
+        total_places_in_curated_lists: Number(statsResult.total_places_in_curated_lists) || 0,
+        publishers_count: Number(statsResult.publishers_count) || 0,
+        location_scopes_count: Number(statsResult.location_scopes_count) || 0,
+        avg_places_per_list: Number(statsResult.avg_places_per_list) || 0,
+        most_recent_update: statsResult.most_recent_update || new Date().toISOString(),
+        private_percentage: 0, // Will be calculated from curated lists data
+        public_lists: 0,
+        private_lists: 0
+      }
+
+      return { data: transformedStats, error: null }
     } catch (error) {
+      console.error('Unexpected error getting stats:', error)
       return { data: null, error }
     }
   }

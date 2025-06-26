@@ -61,9 +61,29 @@ export async function GET() {
       return NextResponse.json(fallbackStats)
     }
 
-    // This code is unreachable since getStats() always returns null now
-    // If a stats function is implemented in the future, this code would handle it
-    return NextResponse.json({ error: 'Stats function not implemented' }, { status: 501 })
+    // Now we have stats from the database function, enhance them with additional data
+    const [allListsResult, curatedListsResult] = await Promise.all([
+      curatedListsAdmin.getAllLists(),
+      curatedListsAdmin.getCuratedLists()
+    ])
+
+    const allLists = allListsResult.data || []
+    const curatedLists = curatedListsResult.data || []
+
+    // Calculate visibility-based metrics
+    const privateLists = curatedLists.filter((list) => list.visibility === 'private').length
+    const publicLists = curatedLists.filter((list) => list.visibility === 'public' || list.visibility === 'curated').length
+    const privatePercentage = stats.total_curated_lists > 0 ? Math.round((privateLists / stats.total_curated_lists) * 100) : 0
+
+    const enhancedStats = {
+      ...stats,
+      total_all_lists: allLists.length,
+      private_percentage: privatePercentage,
+      public_lists: publicLists,
+      private_lists: privateLists
+    }
+
+    return NextResponse.json(enhancedStats)
   } catch (error) {
     console.error('Unexpected error in stats API:', error)
     return NextResponse.json(
