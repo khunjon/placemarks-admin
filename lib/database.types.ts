@@ -455,6 +455,17 @@ export type Database = {
           places: Json
         }[]
       }
+      get_curated_lists_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_curated_lists: number
+          total_places_in_curated_lists: number
+          publishers_count: number
+          location_scopes_count: number
+          avg_places_per_list: number
+          most_recent_update: string
+        }[]
+      }
       upsert_place_with_rich_data: {
         Args: {
           google_place_id_param: string
