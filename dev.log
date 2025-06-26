@@ -1,0 +1,78 @@
+
+> placemarks-admin@0.1.0 dev
+> next dev --turbopack
+
+   ▲ Next.js 15.3.4 (Turbopack)
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.97:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 337ms
+ ✓ Ready in 1575ms
+ ○ Compiling /api/admin/debug-place-enhancement ...
+ ✓ Compiled /api/admin/debug-place-enhancement in 610ms
+ GET /api/admin/debug-place-enhancement 200 in 790ms
+ ○ Compiling /api/places/search ...
+ ✓ Compiled /api/places/search in 562ms
+🌐 [PlacesAPI] Making Google Places API call for: "maido restaurant"
+✅ [PlacesAPI] Google Places API returned 1 results
+ GET /api/places/search?query=maido%20restaurant 200 in 1435ms
+🧪 [DebugPlaceEnhancement] Testing enhancement for place: ChIJObzkJx_IBZERAQaFKNwiTws
+🔍 [DebugPlaceEnhancement] Place needs enhancement: true
+🔍 [PlaceEnhancement] Starting enhancement for place: ChIJObzkJx_IBZERAQaFKNwiTws
+🌐 [PlaceEnhancement] Fetching place details from: http://localhost:3000/api/places/details?place_id=ChIJObzkJx_IBZERAQaFKNwiTws
+ ✓ Compiled /api/places/details in 279ms
+🌐 [PlaceDetailsAPI] Fetching details for place: "ChIJObzkJx_IBZERAQaFKNwiTws"
+✅ [PlaceDetailsAPI] Successfully fetched details for place ChIJObzkJx_IBZERAQaFKNwiTws
+ GET /api/places/details?place_id=ChIJObzkJx_IBZERAQaFKNwiTws 200 in 557ms
+✅ [PlaceEnhancement] Successfully fetched place details for ChIJObzkJx_IBZERAQaFKNwiTws
+✅ [PlaceEnhancement] Successfully enhanced place ChIJObzkJx_IBZERAQaFKNwiTws {
+  fieldsAdded: {
+    phone: true,
+    website: true,
+    rating: true,
+    hours: true,
+    photos: true
+  }
+}
+ POST /api/admin/debug-place-enhancement 200 in 1809ms
+🧪 [DebugPlaceEnhancement] Testing enhancement for place: ChIJObzkJx_IBZERAQaFKNwiTws
+🔍 [DebugPlaceEnhancement] Place needs enhancement: false
+🔍 [PlaceEnhancement] Starting enhancement for place: ChIJObzkJx_IBZERAQaFKNwiTws
+✅ [PlaceEnhancement] Place ChIJObzkJx_IBZERAQaFKNwiTws already has complete data
+ POST /api/admin/debug-place-enhancement 200 in 320ms
+ ✓ Compiled /api/admin/lists in 395ms
+ GET /api/admin/lists 200 in 942ms
+ GET /api/admin/lists 200 in 206ms
+ ✓ Compiled /api/admin/lists/[id] in 468ms
+🔄 [CuratedList] Updating list 6b1d202d-511c-4196-8102-907ade5db154 with 1 places
+📍 [CuratedList] Processing place 1/1: Maido
+🔍 [CuratedList] Found place Maido, checking for enhancement...
+🔍 [PlaceEnhancement] Starting enhancement for place: ChIJObzkJx_IBZERAQaFKNwiTws
+✅ [PlaceEnhancement] Place ChIJObzkJx_IBZERAQaFKNwiTws already has complete data
+ℹ️ [CuratedList] Place Maido already has complete data
+✅ [CuratedList] Successfully updated list 6b1d202d-511c-4196-8102-907ade5db154 { totalPlaces: 1, processedPlaces: 1, successfullyAdded: 1 }
+ PUT /api/admin/lists/6b1d202d-511c-4196-8102-907ade5db154 200 in 2821ms
+🌐 [PlacesAPI] Making Google Places API call for: "le bernardin new york"
+✅ [PlacesAPI] Google Places API returned 1 results
+ GET /api/places/search?query=le%20bernardin%20new%20york 200 in 654ms
+🧪 [DebugPlaceEnhancement] Testing enhancement for place: ChIJV7QQ6kdZwokRax4615zpSGU
+🔍 [DebugPlaceEnhancement] Place needs enhancement: true
+🔍 [PlaceEnhancement] Starting enhancement for place: ChIJV7QQ6kdZwokRax4615zpSGU
+🌐 [PlaceEnhancement] Fetching place details from: http://localhost:3000/api/places/details?place_id=ChIJV7QQ6kdZwokRax4615zpSGU
+🌐 [PlaceDetailsAPI] Fetching details for place: "ChIJV7QQ6kdZwokRax4615zpSGU"
+✅ [PlaceDetailsAPI] Successfully fetched details for place ChIJV7QQ6kdZwokRax4615zpSGU
+ GET /api/places/details?place_id=ChIJV7QQ6kdZwokRax4615zpSGU 200 in 388ms
+✅ [PlaceEnhancement] Successfully fetched place details for ChIJV7QQ6kdZwokRax4615zpSGU
+✅ [PlaceEnhancement] Successfully enhanced place ChIJV7QQ6kdZwokRax4615zpSGU {
+  fieldsAdded: {
+    phone: true,
+    website: true,
+    rating: true,
+    hours: true,
+    photos: true
+  }
+}
+ POST /api/admin/debug-place-enhancement 200 in 1062ms
+[?25h

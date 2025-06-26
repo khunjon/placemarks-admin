@@ -57,6 +57,8 @@ export class PlaceEnhancementService {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
     
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.warn('⚠️ [PlaceEnhancement] Missing Supabase environment variables. Place enhancement will be disabled.')
+      console.warn('⚠️ [PlaceEnhancement] Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY')
       this.supabase = null
       return
     }
@@ -75,6 +77,30 @@ export class PlaceEnhancementService {
       throw new Error('Supabase client not initialized. Please check environment variables.')
     }
     return this.supabase
+  }
+
+  /**
+   * Validate that all required environment variables are available
+   */
+  public validateConfiguration(): { valid: boolean; errors: string[] } {
+    const errors: string[] = []
+    
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      errors.push('Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
+    }
+    
+    if (!process.env.SUPABASE_SERVICE_KEY) {
+      errors.push('Missing SUPABASE_SERVICE_KEY environment variable')
+    }
+    
+    if (!process.env.GOOGLE_PLACES_API_KEY) {
+      errors.push('Missing GOOGLE_PLACES_API_KEY environment variable')
+    }
+    
+    return {
+      valid: errors.length === 0,
+      errors
+    }
   }
 
   /**
@@ -202,12 +228,29 @@ export class PlaceEnhancementService {
    */
   private async fetchGooglePlaceDetails(googlePlaceId: string): Promise<GooglePlaceDetails | null> {
     try {
-      // Use localhost for internal API calls during development, or the env var for production
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '')
-      const response = await fetch(`${baseUrl}/api/places/details?place_id=${encodeURIComponent(googlePlaceId)}`)
+      // Build the correct base URL for internal API calls
+      let baseUrl = ''
+      
+      if (process.env.NEXT_PUBLIC_APP_URL) {
+        // Production or explicitly set URL
+        baseUrl = process.env.NEXT_PUBLIC_APP_URL
+      } else if (process.env.NODE_ENV === 'development') {
+        // Development - use correct localhost port (Next.js defaults to 3000)
+        baseUrl = 'http://localhost:3000'
+      } else {
+        // Server-side in production - try to determine the base URL from headers or use localhost as fallback
+        // In most production environments, we can use localhost for internal API calls
+        baseUrl = 'http://localhost:3000'
+      }
+      
+      const apiUrl = `${baseUrl}/api/places/details?place_id=${encodeURIComponent(googlePlaceId)}`
+      console.log(`🌐 [PlaceEnhancement] Fetching place details from: ${apiUrl}`)
+      
+      const response = await fetch(apiUrl)
       
       if (!response.ok) {
         console.error(`❌ [PlaceEnhancement] API call failed: ${response.status} ${response.statusText}`)
+        console.error(`❌ [PlaceEnhancement] Failed URL: ${apiUrl}`)
         return null
       }
 
@@ -215,12 +258,25 @@ export class PlaceEnhancementService {
       
       if (data.error) {
         console.error('❌ [PlaceEnhancement] API returned error:', data.error)
+        if (data.details) {
+          console.error('❌ [PlaceEnhancement] Error details:', data.details)
+        }
         return null
       }
 
+      if (!data.result) {
+        console.error('❌ [PlaceEnhancement] API returned no result data')
+        return null
+      }
+
+      console.log(`✅ [PlaceEnhancement] Successfully fetched place details for ${googlePlaceId}`)
       return data.result as GooglePlaceDetails
     } catch (error) {
       console.error('❌ [PlaceEnhancement] Error calling Google Places API:', error)
+      if (error instanceof Error) {
+        console.error('❌ [PlaceEnhancement] Error message:', error.message)
+        console.error('❌ [PlaceEnhancement] Error stack:', error.stack)
+      }
       return null
     }
   }
