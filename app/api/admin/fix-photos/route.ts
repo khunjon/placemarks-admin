@@ -3,7 +3,30 @@ import { placeEnhancement } from '@/lib/services/place-enhancement'
 
 export const dynamic = 'force-dynamic'
 
-// POST - Fix photo data structure for curated list places
+/**
+ * Photo Structure Fix API Endpoint
+ * 
+ * This endpoint was created to resolve a specific data migration issue where
+ * curated list places had photo_references stored as string arrays instead of
+ * the proper object arrays with metadata (width, height, html_attributions).
+ * 
+ * Purpose:
+ * - Batch fix photo data structure issues in curated list places
+ * - Force re-enhancement of places to ensure proper photo object format
+ * - Maintain consistency between normal and curated list photo handling
+ * 
+ * When to use:
+ * - If photo data structure issues arise again in the future
+ * - For migrating places that have incorrect photo reference formats
+ * - As a recovery tool if photo enhancements need to be re-run
+ * 
+ * Expected photo structure:
+ * - CORRECT: [{ photo_reference: "...", width: 123, height: 456, html_attributions: [...] }]
+ * - INCORRECT: ["photo_reference_string", "another_string"]
+ * 
+ * @param googlePlaceIds - Array of Google Place IDs to fix
+ * @returns Enhancement results with success/error counts
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()

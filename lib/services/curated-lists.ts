@@ -346,7 +346,9 @@ class CuratedListsAdminService {
           ? `POINT(${placeData.lng} ${placeData.lat})`
           : null
 
-        // Extract photo references instead of storing full URLs
+        // Extract photo references from Google Places API response
+        // IMPORTANT: extractPhotoReferences should preserve object structure, not convert to strings
+        // This prevents the photo disappearance issue that occurred with string arrays
         const photoReferences = extractPhotoReferences(placeData.photos || [])
 
         const { data, error } = await client
@@ -372,7 +374,8 @@ class CuratedListsAdminService {
       }
 
       // Enhance place with Google Places details (for both new and existing places)
-      // This ensures we have complete data for curated lists
+      // This ensures we have complete data for curated lists including proper photo structure
+      // The enhancement automatically fixes photo format issues (string arrays → object arrays)
       console.log(`🔍 [CuratedList] ${isNewPlace ? 'Created' : 'Found'} place ${placeData.name}, checking for enhancement...`)
       
       try {

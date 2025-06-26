@@ -100,5 +100,13 @@ SUPABASE_SERVICE_KEY=your_supabase_service_role_key  # For admin operations
 - Error boundaries and graceful degradation
 - Performance optimizations with React 19 features
 
+### Photo Data Structure Requirements
+- Photo references must be stored as **object arrays** with complete metadata
+- **Correct format**: `[{ photo_reference: "...", width: 123, height: 456, html_attributions: [...] }]`
+- **Incorrect format**: `["photo_ref_string1", "photo_ref_string2"]` (causes photos to disappear)
+- Place enhancement service automatically ensures proper photo structure
+- Photo structure fix tools available at `/api/admin/fix-photos` for migration issues
+- Always use `placeEnhancement.enhancePlace()` with `forcePhotoUpdate=true` to fix structure issues
+
 ### Database Interaction
 - You have access to Supabase MCP tools to view the database schema. Do not make changes to the schema in this project. 

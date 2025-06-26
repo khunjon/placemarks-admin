@@ -79,6 +79,11 @@ export class PlaceEnhancementService {
 
   /**
    * Check if a place needs enhancement
+   * 
+   * @param googlePlaceId - The Google Place ID to check
+   * @param forcePhotoUpdate - Force check for photo structure issues (string arrays vs object arrays)
+   *                          Added during photo migration to detect and fix incorrect photo formats
+   * @returns Promise<boolean> - true if the place needs enhancement
    */
   async needsEnhancement(googlePlaceId: string, forcePhotoUpdate = false): Promise<boolean> {
     try {
@@ -95,6 +100,9 @@ export class PlaceEnhancementService {
       }
 
       // Check for photo structure issue - need to force update if photos are string arrays
+      // This detects the migration issue where photo_references were stored as:
+      // INCORRECT: ["photo_ref_string1", "photo_ref_string2"] 
+      // CORRECT: [{ photo_reference: "...", width: 123, height: 456, html_attributions: [...] }]
       let needsPhotoFix = false
       if (forcePhotoUpdate && place.photo_references) {
         try {
@@ -128,6 +136,11 @@ export class PlaceEnhancementService {
 
   /**
    * Enhance a place with Google Places details
+   * 
+   * @param googlePlaceId - The Google Place ID to enhance
+   * @param forcePhotoUpdate - Force photo structure validation and re-enhancement
+   *                          Used during migration to fix string array photo format issues
+   * @returns Promise<EnhancementResult> - Results including fields that were added/updated
    */
   async enhancePlace(googlePlaceId: string, forcePhotoUpdate = false): Promise<EnhancementResult> {
     const result: EnhancementResult = {
@@ -258,7 +271,10 @@ export class PlaceEnhancementService {
         fieldsAdded.hours = true
       }
 
-      // Photos
+      // Photos - Store complete photo objects with metadata
+      // IMPORTANT: Store full photo objects, not just reference strings
+      // Correct format: [{ photo_reference: "...", width: 123, height: 456, html_attributions: [...] }]
+      // This prevents the migration issue that occurred with string arrays: ["ref1", "ref2"]
       if (placeDetails.photos && placeDetails.photos.length > 0) {
         // Store the complete photo objects with metadata, not just the photo_reference strings
         updateData.photo_references = placeDetails.photos
@@ -342,6 +358,21 @@ export class PlaceEnhancementService {
 
   /**
    * Fix photo data structure for curated list places
+   * 
+   * This method was created to resolve a specific migration issue where curated list places
+   * had photo_references stored as string arrays instead of proper object arrays with metadata.
+   * 
+   * Background:
+   * - During initial place creation, photos were incorrectly stored as ["ref1", "ref2"]
+   * - Should be stored as [{ photo_reference: "ref1", width: 123, height: 456, html_attributions: [...] }]
+   * - This caused photos to disappear in curated lists within the app
+   * 
+   * This method forces re-enhancement with forcePhotoUpdate=true to fix the structure.
+   * 
+   * @param googlePlaceIds - Array of Google Place IDs that need photo structure fixes
+   * @param batchSize - Number of places to process in parallel (default: 3, rate limiting)
+   * @param delayMs - Delay between batches in milliseconds (default: 2000ms)
+   * @returns Promise with processing results and statistics
    */
   async fixPhotoStructures(googlePlaceIds: string[], batchSize: number = 3, delayMs: number = 2000): Promise<{
     totalProcessed: number
