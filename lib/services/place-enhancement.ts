@@ -80,7 +80,7 @@ export class PlaceEnhancementService {
   /**
    * Check if a place needs enhancement
    */
-  async needsEnhancement(googlePlaceId: string): Promise<boolean> {
+  async needsEnhancement(googlePlaceId: string, forcePhotoUpdate = false): Promise<boolean> {
     try {
       const client = this.checkClient()
       const { data: place, error } = await client
@@ -94,6 +94,20 @@ export class PlaceEnhancementService {
         return true
       }
 
+      // Check for photo structure issue - need to force update if photos are string arrays
+      let needsPhotoFix = false
+      if (forcePhotoUpdate && place.photo_references) {
+        try {
+          const photoRefs = Array.isArray(place.photo_references) ? place.photo_references : JSON.parse(JSON.stringify(place.photo_references))
+          if (Array.isArray(photoRefs) && photoRefs.length > 0) {
+            // Check if first element is a string (old format) instead of object (new format)
+            needsPhotoFix = typeof photoRefs[0] === 'string'
+          }
+        } catch {
+          needsPhotoFix = true // If we can't parse, assume it needs fixing
+        }
+      }
+
       // A place needs enhancement if ANY of these conditions are true
       const needsEnhancement = (
         !place.phone ||
@@ -101,6 +115,7 @@ export class PlaceEnhancementService {
         !place.google_rating ||
         !place.hours_open ||
         !place.photo_references ||
+        needsPhotoFix ||
         (typeof place.hours_open === 'object' && place.hours_open && Object.keys(place.hours_open).length === 0)
       )
 
@@ -114,7 +129,7 @@ export class PlaceEnhancementService {
   /**
    * Enhance a place with Google Places details
    */
-  async enhancePlace(googlePlaceId: string): Promise<EnhancementResult> {
+  async enhancePlace(googlePlaceId: string, forcePhotoUpdate = false): Promise<EnhancementResult> {
     const result: EnhancementResult = {
       enhanced: false,
       fieldsAdded: {
@@ -127,10 +142,10 @@ export class PlaceEnhancementService {
     }
 
     try {
-      console.log(`🔍 [PlaceEnhancement] Starting enhancement for place: ${googlePlaceId}`)
+      console.log(`🔍 [PlaceEnhancement] Starting enhancement for place: ${googlePlaceId}${forcePhotoUpdate ? ' (forcing photo update)' : ''}`)
 
       // Check if enhancement is needed
-      const needsUpdate = await this.needsEnhancement(googlePlaceId)
+      const needsUpdate = await this.needsEnhancement(googlePlaceId, forcePhotoUpdate)
       if (!needsUpdate) {
         console.log(`✅ [PlaceEnhancement] Place ${googlePlaceId} already has complete data`)
         result.enhanced = false
@@ -174,8 +189,9 @@ export class PlaceEnhancementService {
    */
   private async fetchGooglePlaceDetails(googlePlaceId: string): Promise<GooglePlaceDetails | null> {
     try {
-      // Use the existing API route for consistency
-      const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/places/details?place_id=${encodeURIComponent(googlePlaceId)}`)
+      // Use localhost for internal API calls during development, or the env var for production
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3001' : '')
+      const response = await fetch(`${baseUrl}/api/places/details?place_id=${encodeURIComponent(googlePlaceId)}`)
       
       if (!response.ok) {
         console.error(`❌ [PlaceEnhancement] API call failed: ${response.status} ${response.statusText}`)
@@ -244,8 +260,8 @@ export class PlaceEnhancementService {
 
       // Photos
       if (placeDetails.photos && placeDetails.photos.length > 0) {
-        const photoReferences = placeDetails.photos.map(photo => photo.photo_reference)
-        updateData.photo_references = photoReferences
+        // Store the complete photo objects with metadata, not just the photo_reference strings
+        updateData.photo_references = placeDetails.photos
         fieldsAdded.photos = true
       }
 
@@ -321,6 +337,71 @@ export class PlaceEnhancementService {
              (hours.weekday_text || hours.periods || hours.open_now !== undefined)
     } catch {
       return false
+    }
+  }
+
+  /**
+   * Fix photo data structure for curated list places
+   */
+  async fixPhotoStructures(googlePlaceIds: string[], batchSize: number = 3, delayMs: number = 2000): Promise<{
+    totalProcessed: number
+    enhanced: number
+    skipped: number
+    errors: number
+    results: Array<{ placeId: string; result: EnhancementResult }>
+  }> {
+    const results: Array<{ placeId: string; result: EnhancementResult }> = []
+    let enhanced = 0
+    let skipped = 0
+    let errors = 0
+
+    console.log(`🔧 [PlaceEnhancement] Starting photo structure fix for ${googlePlaceIds.length} places`)
+
+    // Process in batches
+    for (let i = 0; i < googlePlaceIds.length; i += batchSize) {
+      const batch = googlePlaceIds.slice(i, i + batchSize)
+      
+      console.log(`🔧 [PlaceEnhancement] Processing photo fix batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(googlePlaceIds.length / batchSize)}`)
+
+      // Process batch in parallel
+      const batchPromises = batch.map(async (placeId) => {
+        const result = await this.enhancePlace(placeId, true) // Force photo update
+        return { placeId, result }
+      })
+
+      const batchResults = await Promise.all(batchPromises)
+      results.push(...batchResults)
+
+      // Count results
+      batchResults.forEach(({ result }) => {
+        if (result.error) {
+          errors++
+        } else if (result.enhanced) {
+          enhanced++
+        } else {
+          skipped++
+        }
+      })
+
+      // Delay between batches to respect rate limits
+      if (i + batchSize < googlePlaceIds.length) {
+        await new Promise(resolve => setTimeout(resolve, delayMs))
+      }
+    }
+
+    console.log(`✅ [PlaceEnhancement] Photo structure fix completed`, {
+      totalProcessed: googlePlaceIds.length,
+      enhanced,
+      skipped,
+      errors
+    })
+
+    return {
+      totalProcessed: googlePlaceIds.length,
+      enhanced,
+      skipped,
+      errors,
+      results
     }
   }
 
