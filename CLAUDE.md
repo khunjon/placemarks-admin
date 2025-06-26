@@ -99,3 +99,6 @@ SUPABASE_SERVICE_KEY=your_supabase_service_role_key  # For admin operations
 - Consistent import patterns and file organization
 - Error boundaries and graceful degradation
 - Performance optimizations with React 19 features
+
+### Database Interaction
+- You have access to Supabase MCP tools to view the database schema. Do not make changes to the schema in this project. 
